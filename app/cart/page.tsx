@@ -2,13 +2,13 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
-import { db } from '@/lib/firebase';
 import { ref, push, set } from 'firebase/database';
 import { loadRazorpayScript } from '@/utils/loadScript';
 import { 
   ArrowRight, Loader2, CheckCircle2, ShieldCheck, 
   ChevronRight, Trash2, ShoppingBag, Truck, History, Search 
 } from 'lucide-react';
+import { db } from '@/lib/firebase';
 
 export default function CartPage() {
   const { cart, updateQty, removeItem, clearCart } = useCart();
@@ -51,7 +51,7 @@ export default function CartPage() {
     }
 
     const options = {
-      key: process.env.RAZORPAY_KEY,
+      key: process.env.NEXT_PUBLIC_RAZORPAY_KEY,
       amount: Math.round(total * 100),
       currency: "INR",
       name: "Clothiva Jetpur",
