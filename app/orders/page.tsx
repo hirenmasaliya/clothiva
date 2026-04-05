@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { db } from "@/lib/firebase";
 import { ref, onValue } from "firebase/database";
@@ -14,7 +14,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-export default function OrdersPage() {
+// 1. Separate the logic into a content component
+function OrdersContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const userEmail = searchParams.get("email");
@@ -57,231 +58,59 @@ export default function OrdersPage() {
           <title>Invoice_Clothiva_${order.paymentId.slice(-6)}</title>
           <style>
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap');
-            
-            body { 
-                font-family: 'Inter', sans-serif; 
-                padding: 0; margin: 0; 
-                background-color: #FFFFFF; 
-                color: #1C1917; 
-                -webkit-print-color-adjust: exact !important; 
-                print-color-adjust: exact !important; 
-            }
+            body { font-family: 'Inter', sans-serif; padding: 0; margin: 0; background-color: #FFFFFF; color: #1C1917; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             .page { padding: 50px; max-width: 850px; margin: auto; }
-            
-            /* TOP BRANDING */
-            .header-grid { 
-                display: grid; 
-                grid-template-columns: 1fr 1fr; 
-                border-bottom: 2px solid #1C1917; 
-                padding-bottom: 30px; 
-                margin-bottom: 40px; 
-            }
-            .logo-area h1 { 
-                font-family: 'Playfair Display', serif; 
-                font-size: 36px; margin: 0; 
-                font-weight: 700; 
-                letter-spacing: -0.02em; 
-            }
-            .logo-area span { 
-                display: block; 
-                font-size: 9px; 
-                text-transform: uppercase; 
-                letter-spacing: 0.5em; 
-                font-weight: 800; 
-                color: #7F1D1D; 
-                margin-top: 5px; 
-            }
-            .brand-address { 
-                font-size: 10px; 
-                color: #78716C; 
-                margin-top: 15px; 
-                line-height: 1.6; 
-                text-transform: uppercase;
-                letter-spacing: 0.05em;
-            }
-
+            .header-grid { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 2px solid #1C1917; padding-bottom: 30px; margin-bottom: 40px; }
+            .logo-area h1 { font-family: 'Playfair Display', serif; font-size: 36px; margin: 0; font-weight: 700; letter-spacing: -0.02em; }
+            .logo-area span { display: block; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5em; font-weight: 800; color: #7F1D1D; margin-top: 5px; }
             .invoice-meta { text-align: right; }
-            .invoice-meta h2 { 
-                font-size: 11px; 
-                text-transform: uppercase; 
-                letter-spacing: 0.4em; 
-                margin-bottom: 15px; 
-                font-weight: 800; 
-                color: #7F1D1D; 
-            }
-            .meta-details { font-size: 12px; line-height: 2; font-weight: 600; }
-            .meta-details b { color: #78716C; text-transform: uppercase; font-size: 9px; margin-right: 8px; }
-
-            /* CLIENT & PAYMENT INFO */
-            .billing-grid { 
-                display: grid; 
-                grid-template-columns: 1fr 1fr; 
-                gap: 50px; 
-                margin-bottom: 50px; 
-            }
-            .info-label { 
-                font-size: 9px; 
-                text-transform: uppercase; 
-                letter-spacing: 0.2em; 
-                color: #A8A29E; 
-                border-bottom: 1px solid #E7E5E4; 
-                padding-bottom: 8px; 
-                margin-bottom: 12px; 
-                font-weight: 800; 
-            }
+            .invoice-meta h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.4em; margin-bottom: 15px; font-weight: 800; color: #7F1D1D; }
+            .billing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 50px; margin-bottom: 50px; }
+            .info-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.2em; color: #A8A29E; border-bottom: 1px solid #E7E5E4; padding-bottom: 8px; margin-bottom: 12px; font-weight: 800; }
             .info-content { font-family: 'Playfair Display', serif; font-size: 17px; font-style: italic; line-height: 1.4; }
-            .info-sub { font-family: 'Inter', sans-serif; font-size: 11px; font-style: normal; color: #57534E; margin-top: 8px; font-weight: 500; }
-
-            /* TABLE STYLES */
             table { width: 100%; border-collapse: collapse; margin-bottom: 40px; }
-            th { 
-                padding: 15px 10px; 
-                font-size: 10px; 
-                text-transform: uppercase; 
-                letter-spacing: 0.2em; 
-                color: #1C1917; 
-                border-bottom: 1px solid #1C1917; 
-                text-align: left; 
-                font-weight: 800;
-            }
+            th { padding: 15px 10px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.2em; color: #1C1917; border-bottom: 1px solid #1C1917; text-align: left; font-weight: 800; }
             td { padding: 20px 10px; border-bottom: 1px solid #F5F5F4; font-size: 13px; font-weight: 600; }
-            
-            .item-title { font-family: 'Playfair Display', serif; font-size: 18px; font-style: italic; margin-bottom: 4px; }
-            .item-subtitle { font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: #A8A29E; }
-            
-            .text-right { text-align: right; }
-            .text-center { text-align: center; }
-
-            /* TOTALS SECTION */
             .summary-container { display: flex; justify-content: flex-end; }
             .summary-box { width: 320px; }
-            .summary-line { 
-                display: flex; 
-                justify-content: space-between; 
-                padding: 2px 0; 
-                font-size: 11px; 
-                font-weight: 600; 
-                text-transform: uppercase; 
-                letter-spacing: 0.1em; 
-                color: #78716C; 
-            }
-            .summary-line span:last-child { color: #1C1917; font-family: 'Playfair Display', serif; font-size: 14px; text-transform: none; }
-            
-            .grand-total-line { 
-                border-top: 2px solid #1C1917; 
-                margin-top: 5px; 
-                padding-top: 10px; 
-                display: flex; 
-                justify-content: space-between; 
-                align-items: center; 
-            }
-            .grand-total-line .label { font-size: 10px; font-weight: 900; color: #7F1D1D; text-transform: uppercase; letter-spacing: 0.3em; }
+            .summary-line { display: flex; justify-content: space-between; padding: 2px 0; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: #78716C; }
+            .grand-total-line { border-top: 2px solid #1C1917; margin-top: 5px; padding-top: 10px; display: flex; justify-content: space-between; align-items: center; }
             .grand-total-line .amount { font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 700; color: #7F1D1D; }
-
-            /* FOOTER */
-            .footer { 
-                margin-top: 80px; 
-                border-top: 1px solid #E7E5E4; 
-                padding-top: 30px; 
-                text-align: center; 
-            }
-            .footer p { font-size: 10px; color: #A8A29E; font-style: italic; margin-bottom: 15px; line-height: 1.8; max-width: 500px; margin-left: auto; margin-right: auto; }
-            .auth-sign { margin-top: 40px; display: flex; justify-content: flex-end; }
-            .sign-box { border-top: 1px solid #1C1917; width: 180px; text-align: center; padding-top: 8px; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.2em; }
+            .footer { margin-top: 80px; border-top: 1px solid #E7E5E4; padding-top: 30px; text-align: center; font-size: 10px; color: #A8A29E; font-style: italic; }
           </style>
         </head>
         <body>
           <div class="page">
             <div class="header-grid">
-              <div class="logo-area">
-                <h1>CLOTHIVA</h1>
-                <span>Jetpur Boutique Atelier</span>
-                <div class="brand-address">
-                    Station Road, Jetpur, Rajkot<br/>
-                    Gujarat, India — 360370<br/>
-                    GSTIN: 24ABCDE1234F1Z5
-                </div>
-              </div>
-              <div class="invoice-meta">
-                <h2>Tax Invoice</h2>
-                <div class="meta-details">
-                  <b>Registry</b> #${order.paymentId.slice(-10).toUpperCase()}<br/>
-                  <b>Date</b> ${new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}<br/>
-                  <b>Status</b> Paid in Full
-                </div>
-              </div>
+              <div class="logo-area"><h1>CLOTHIVA</h1><span>Jetpur Boutique Atelier</span></div>
+              <div class="invoice-meta"><h2>Tax Invoice</h2><div><b>Registry</b> #${order.paymentId.slice(-10).toUpperCase()}<br/><b>Date</b> ${new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}</div></div>
             </div>
-
             <div class="billing-grid">
-              <div class="info-box">
-                <div class="info-label">Client Details</div>
-                <div class="info-content">${order.customer.firstName} ${order.customer.lastName}</div>
-                <div class="info-sub">
-                  ${order.customer.address}, ${order.customer.city}<br/>
-                  Contact: ${order.customer.phone}
-                </div>
-              </div>
-              <div class="info-box">
-                <div class="info-label">Transaction Registry</div>
-                <div class="info-sub" style="line-height: 2;">
-                  Method: <b>Razorpay Secure Checkout</b><br/>
-                  Payment ID: <b>${order.paymentId}</b><br/>
-                  Atelier: <b>Jetpur Craft Unit</b>
-                </div>
-              </div>
+              <div class="info-box"><div class="info-label">Client Details</div><div class="info-content">${order.customer.firstName} ${order.customer.lastName}</div><div class="info-sub">${order.customer.address}, ${order.customer.city}</div></div>
+              <div class="info-box"><div class="info-label">Transaction Registry</div><div class="info-sub">Method: <b>Razorpay Secure</b><br/>ID: <b>${order.paymentId}</b></div></div>
             </div>
-
             <table>
-              <thead>
-                <tr>
-                  <th style="width: 60%;">Description</th>
-                  <th class="text-center">Qty</th>
-                  <th class="text-right">Unit Price</th>
-                  <th class="text-right">Total</th>
-                </tr>
-              </thead>
+              <thead><tr><th>Description</th><th style="text-align:center">Qty</th><th style="text-align:right">Unit Price</th><th style="text-align:right">Total</th></tr></thead>
               <tbody>
-                ${order.items.map((item: { title: any; fabric: any; qty: number; price: number; }) => `
+                ${order.items.map((item: any) => `
                   <tr>
-                    <td>
-                      <div class="item-title">${item.title}</div>
-                      <div class="item-subtitle">${item.fabric || 'Authentic Gaji Silk'} • Handcrafted</div>
-                    </td>
-                    <td class="text-center">${item.qty}</td>
-                    <td class="text-right">₹${Number(item.price).toLocaleString()}</td>
-                    <td class="text-right">₹${(item.price * item.qty).toLocaleString()}</td>
+                    <td><div style="font-family:'Playfair Display',serif; font-style:italic; font-size:18px;">${item.title}</div><div style="font-size:9px; color:#A8A29E; text-transform:uppercase;">${item.fabric || 'Authentic Gaji Silk'}</div></td>
+                    <td style="text-align:center">${item.qty}</td>
+                    <td style="text-align:right">₹${Number(item.price).toLocaleString()}</td>
+                    <td style="text-align:right">₹${(item.price * item.qty).toLocaleString()}</td>
                   </tr>
                 `).join('')}
               </tbody>
             </table>
-
             <div class="summary-container">
               <div class="summary-box">
-                <div class="summary-line">
-                  <span>Base Amount</span>
-                  <span>₹${subtotal.toLocaleString()}</span>
-                </div>
-                <div class="summary-line">
-                  <span>GST (5%)</span>
-                  <span>₹${gst.toLocaleString()}</span>
-                </div>
-                <div class="summary-line">
-                  <span>Boutique Delivery</span>
-                  <span>${shipping === 0 ? 'Complimentary' : '₹' + shipping}</span>
-                </div>
-                <div class="grand-total-line">
-                  <div class="label">Total Due</div>
-                  <div class="amount">₹${total.toLocaleString()}</div>
-                </div>
+                <div class="summary-line"><span>Base Amount</span><span>₹${subtotal.toLocaleString()}</span></div>
+                <div class="summary-line"><span>GST (5%)</span><span>₹${gst.toLocaleString()}</span></div>
+                <div class="summary-line"><span>Delivery</span><span>${shipping === 0 ? 'Complimentary' : '₹' + shipping}</span></div>
+                <div class="grand-total-line"><div class="label">Total Due</div><div class="amount">₹${total.toLocaleString()}</div></div>
               </div>
             </div>
-
-            <div class="footer">
-              <p>This document certifies the acquisition of authentic handcrafted Bandhani from the Clothiva Atelier. Each piece is uniquely dyed and processed in Jetpur, maintaining centuries-old craft traditions.</p>
-              <div class="auth-sign">
-                <div class="sign-box">Authorized Signatory</div>
-              </div>
-            </div>
+            <div class="footer"><p>This document certifies the acquisition of authentic handcrafted Bandhani from the Clothiva Atelier.</p></div>
           </div>
         </body>
       </html>
@@ -299,8 +128,6 @@ export default function OrdersPage() {
     return (
         <main className="bg-[#FCFAF8] min-h-screen pt-32 pb-40 selection:bg-red-900 selection:text-white">
             <div className="max-w-6xl mx-auto px-6">
-
-                {/* BREADCRUMB */}
                 <nav className="mb-12">
                     <Link href="/shop" className="group inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.3em] font-bold text-stone-400 hover:text-red-900 transition-colors">
                         <ChevronLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
@@ -308,7 +135,6 @@ export default function OrdersPage() {
                     </Link>
                 </nav>
 
-                {/* HEADER */}
                 <header className="mb-20 space-y-4">
                     <h1 className="text-6xl md:text-8xl font-serif text-stone-900 tracking-tighter leading-none italic font-light">
                         My <span className="font-normal not-italic underline decoration-red-900/10 underline-offset-[12px]">Ledger</span>
@@ -324,8 +150,6 @@ export default function OrdersPage() {
                     <div className="space-y-16">
                         {orders.map((order) => (
                             <section key={order.paymentId} className="group bg-white border border-stone-100 rounded-[3rem] overflow-hidden transition-all duration-700 hover:shadow-3xl hover:shadow-stone-200/40">
-
-                                {/* ORDER BAR */}
                                 <div className="bg-stone-50/50 px-10 py-8 flex flex-col md:flex-row justify-between items-center gap-6 border-b border-stone-100">
                                     <div className="flex flex-wrap gap-12">
                                         <div>
@@ -344,7 +168,6 @@ export default function OrdersPage() {
                                             </div>
                                         </div>
                                     </div>
-
                                     <button
                                         onClick={() => handlePrint(order)}
                                         className="group/print flex items-center gap-3 bg-stone-900 text-white px-8 py-4 rounded-2xl hover:bg-red-900 transition-all active:scale-95 shadow-xl shadow-stone-900/20"
@@ -354,11 +177,8 @@ export default function OrdersPage() {
                                     </button>
                                 </div>
 
-                                {/* CONTENT */}
                                 <div className="p-10">
                                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
-
-                                        {/* ITEMS LIST */}
                                         <div className="lg:col-span-7 space-y-10">
                                             {order.items.map((item: any, i: number) => (
                                                 <div key={i} className="flex items-center gap-8 group/item">
@@ -374,7 +194,6 @@ export default function OrdersPage() {
                                             ))}
                                         </div>
 
-                                        {/* FINANCIAL BREAKDOWN & SHIPPING */}
                                         <div className="lg:col-span-5 space-y-8">
                                             <div className="bg-stone-50 rounded-[2.5rem] p-10 space-y-8">
                                                 <div className="flex gap-5">
@@ -390,7 +209,6 @@ export default function OrdersPage() {
                                                         </p>
                                                     </div>
                                                 </div>
-
                                                 <div className="pt-8 border-t border-stone-200 space-y-4">
                                                     <div className="flex justify-between text-[10px] uppercase tracking-widest font-bold text-stone-400">
                                                         <span>Subtotal</span>
@@ -408,7 +226,6 @@ export default function OrdersPage() {
                                                             {(order.breakdown?.shipping === 0) ? "Complimentary" : `₹${order.breakdown?.shipping || 60}`}
                                                         </span>
                                                     </div>
-
                                                     <div className="pt-6 mt-4 border-t-2 border-stone-900/5 flex justify-between items-end">
                                                         <div className="space-y-1">
                                                             <span className="block text-[9px] uppercase tracking-[0.3em] font-black text-red-900">Total Investment</span>
@@ -420,7 +237,6 @@ export default function OrdersPage() {
                                                     </div>
                                                 </div>
                                             </div>
-
                                             <div className="px-6 flex items-center gap-4 text-stone-400">
                                                 <CreditCard size={18} strokeWidth={1.5} />
                                                 <p className="text-[9px] uppercase tracking-[0.2em] font-bold leading-tight">Secure Payment via Razorpay <br /> Verified Boutique Ledger</p>
@@ -428,12 +244,10 @@ export default function OrdersPage() {
                                         </div>
                                     </div>
                                 </div>
-
                             </section>
                         ))}
                     </div>
                 ) : (
-                    /* SEARCH STATE */
                     <div className="max-w-xl mx-auto bg-white p-16 rounded-[4rem] shadow-3xl shadow-stone-200/40 text-center border border-stone-100">
                         <div className="w-24 h-24 bg-stone-50 rounded-full flex items-center justify-center mx-auto mb-12">
                             <Search size={36} strokeWidth={1} className="text-stone-200" />
@@ -456,5 +270,21 @@ export default function OrdersPage() {
                 )}
             </div>
         </main>
+    );
+}
+
+// 2. The main exported page component wrapped in Suspense
+export default function OrdersPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-[#FCFAF8] flex items-center justify-center">
+                <div className="text-center space-y-4">
+                    <div className="w-12 h-12 border-4 border-stone-200 border-t-red-900 rounded-full animate-spin mx-auto"></div>
+                    <p className="text-[10px] uppercase tracking-widest font-black text-stone-400">Accessing Atelier Archives...</p>
+                </div>
+            </div>
+        }>
+            <OrdersContent />
+        </Suspense>
     );
 }
