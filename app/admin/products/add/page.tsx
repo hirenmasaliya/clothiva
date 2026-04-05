@@ -157,7 +157,7 @@ export default function AddProductPage() {
             </div>
             <div className="p-6 space-y-4">
               <CldUploadWidget 
-                uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET} 
+                uploadPreset={process.env.CLOUDINARY_UPLOAD_PRESET} 
                 onSuccess={handleUploadSuccess}
               >
                 {({ open }) => (

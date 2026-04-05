@@ -51,7 +51,7 @@ export default function CartPage() {
     }
 
     const options = {
-      key: process.env.NEXT_PUBLIC_RAZORPAY_KEY,
+      key: process.env.RAZORPAY_KEY,
       amount: Math.round(total * 100),
       currency: "INR",
       name: "Clothiva Jetpur",
