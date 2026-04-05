@@ -1,63 +1,96 @@
 "use client";
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { db } from '@/lib/firebase'; // Ensure your firebase config is imported
+import { ref, onValue, update } from 'firebase/database';
 import { 
   Search, 
   Eye, 
   Clock, 
-  MoreHorizontal,
   Download,
-  Calendar,
-  ChevronLeft,
-  ChevronRight,
-  CheckCircle2,
-  XCircle
+  XCircle,
+  PackageCheck,
+  RefreshCcw
 } from 'lucide-react';
 
-const INITIAL_ORDERS = [
-  { id: "ORD-7742", customer: "Priya Sharma", date: "Apr 04, 2026", items: 1, total: 6800, payment: "Paid", status: "Processing" },
-  { id: "ORD-7741", customer: "Anjali Patel", date: "Apr 03, 2026", items: 2, total: 4200, payment: "Paid", status: "Shipped" },
-  { id: "ORD-7740", customer: "Suresh Mehra", date: "Apr 03, 2026", items: 1, total: 18500, payment: "Pending", status: "Awaiting Payment" },
-  { id: "ORD-7739", customer: "Megha Rao", date: "Apr 02, 2026", items: 1, total: 5500, payment: "Paid", status: "Delivered" },
-];
-
 export default function OrdersPage() {
-  const [orders, setOrders] = useState(INITIAL_ORDERS);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterPayment, setFilterPayment] = useState('All');
 
-  // --- 1. SEARCH & FILTER LOGIC ---
+  // --- 1. LIVE DATA FETCHING FROM FIREBASE ---
+  useEffect(() => {
+    const ordersRef = ref(db, 'orders');
+    
+    // Listen for real-time changes
+    const unsubscribe = onValue(ordersRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        // Convert Firebase object to Array and sort by newest first
+        const ordersList = Object.keys(data).map(key => ({
+          ...data[key],
+          firebaseId: key // Keep the unique key for updates
+        })).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        
+        setOrders(ordersList);
+      } else {
+        setOrders([]);
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe(); // Cleanup listener on unmount
+  }, []);
+
+  // --- 2. SEARCH & FILTER LOGIC ---
   const filteredOrders = useMemo(() => {
     return orders.filter(order => {
-      const matchesSearch = 
-        order.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.id.toLowerCase().includes(searchTerm.toLowerCase());
+      const customerName = `${order.customer?.firstName} ${order.customer?.lastName}`.toLowerCase();
+      const orderId = (order.paymentId || "").toLowerCase();
       
-      const matchesPayment = filterPayment === 'All' || order.payment === filterPayment;
+      const matchesSearch = 
+        customerName.includes(searchTerm.toLowerCase()) ||
+        orderId.includes(searchTerm.toLowerCase());
+      
+      // Checking status from your 'status' field (Paid/Confirmed)
+      const matchesPayment = filterPayment === 'All' || order.status === filterPayment;
 
       return matchesSearch && matchesPayment;
     });
   }, [searchTerm, filterPayment, orders]);
 
-  // --- 2. UPDATE STATUS FUNCTION ---
-  const updateStatus = (id: string, newStatus: string) => {
-    setOrders(prev => prev.map(order => 
-      order.id === id ? { ...order, status: newStatus } : order
-    ));
-    // In a real app, you'd trigger a Firebase update here:
-    // update(ref(db, `orders/${id}`), { status: newStatus });
+  // --- 3. UPDATE STATUS IN FIREBASE ---
+  const handleUpdateStatus = async (firebaseId: string, newStatus: string) => {
+    try {
+      const orderRef = ref(db, `orders/${firebaseId}`);
+      await update(orderRef, { deliveryStatus: newStatus });
+      // The onValue listener will automatically update the UI
+    } catch (error) {
+      alert("Failed to update status in the ledger.");
+    }
   };
 
-  // --- 3. CSV EXPORT LOGIC ---
+  // --- 4. CSV EXPORT ---
   const exportOrders = () => {
-    const headers = "Order ID,Customer,Date,Total,Status\n";
-    const rows = filteredOrders.map(o => `${o.id},${o.customer},${o.date},${o.total},${o.status}`).join("\n");
+    const headers = "Order ID,Customer,Email,Total,Status,Date\n";
+    const rows = filteredOrders.map(o => 
+      `${o.paymentId},${o.customer?.firstName} ${o.customer?.lastName},${o.customer?.email},${o.amount},${o.deliveryStatus || 'Processing'},${o.createdAt}`
+    ).join("\n");
+    
     const blob = new Blob([headers + rows], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Clothiva_Orders_${new Date().toLocaleDateString()}.csv`;
+    a.download = `Clothiva_Admin_Orders.csv`;
     a.click();
   };
+
+  if (loading) return (
+    <div className="flex flex-col items-center justify-center h-64 space-y-4">
+      <RefreshCcw className="animate-spin text-stone-300" size={32} />
+      <p className="text-[10px] uppercase tracking-widest font-bold text-stone-400">Syncing with Atelier Ledger...</p>
+    </div>
+  );
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -68,113 +101,113 @@ export default function OrdersPage() {
             Order <span className="italic font-light text-stone-500">Fulfillment</span>
           </h1>
           <p className="text-stone-500 text-[10px] mt-4 uppercase tracking-[0.2em] font-bold">
-            Live Overview: {filteredOrders.length} Results Found
+            Live Records: {filteredOrders.length} Orders Found
           </p>
         </div>
         <button 
           onClick={exportOrders}
           className="flex items-center gap-2 px-6 py-3 border border-stone-200 rounded-xl text-xs uppercase tracking-widest font-bold hover:bg-stone-900 hover:text-white transition-all active:scale-95"
         >
-          <Download size={16} /> Export Data
+          <Download size={16} /> Export CSV
         </button>
       </div>
 
-      {/* --- FILTER & SEARCH BAR --- */}
+      {/* --- FILTER & SEARCH --- */}
       <div className="bg-white p-4 border border-stone-200 rounded-2xl flex flex-col lg:flex-row gap-4 items-center shadow-sm">
         <div className="relative flex-1 w-full">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-300" size={18} />
           <input 
             type="text" 
-            placeholder="Search customer or Order ID..." 
+            placeholder="Search by name or Payment ID..." 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 bg-stone-50 border-none rounded-xl text-sm outline-none focus:ring-2 ring-red-900/10 transition-all placeholder:text-stone-300"
+            className="w-full pl-12 pr-4 py-3 bg-stone-50 border-none rounded-xl text-sm outline-none focus:ring-2 ring-red-900/10 transition-all"
           />
         </div>
-        <div className="flex gap-2 w-full lg:w-auto">
-          <div className="flex bg-stone-50 p-1 rounded-xl border border-stone-100">
-            {['All', 'Paid', 'Pending'].map((status) => (
-              <button 
-                key={status}
-                onClick={() => setFilterPayment(status)}
-                className={`px-5 py-2 text-[10px] uppercase tracking-widest font-bold rounded-lg transition-all ${
-                  filterPayment === status ? 'bg-white text-red-900 shadow-sm' : 'text-stone-400 hover:text-stone-600'
-                }`}
-              >
-                {status}
-              </button>
-            ))}
-          </div>
+        <div className="flex bg-stone-50 p-1 rounded-xl border border-stone-100">
+          {['All', 'Confirmed', 'Paid'].map((status) => (
+            <button 
+              key={status}
+              onClick={() => setFilterPayment(status)}
+              className={`px-5 py-2 text-[10px] uppercase tracking-widest font-bold rounded-lg transition-all ${
+                filterPayment === status ? 'bg-white text-red-900 shadow-sm' : 'text-stone-400'
+              }`}
+            >
+              {status}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* --- ORDERS TABLE --- */}
-      <div className="bg-white border border-stone-200 rounded-3xl shadow-sm overflow-hidden min-h-[400px]">
+      {/* --- TABLE --- */}
+      <div className="bg-white border border-stone-200 rounded-3xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead className="bg-stone-50/50 border-b border-stone-100 text-[10px] uppercase tracking-[0.2em] font-bold text-stone-400">
               <tr>
-                <th className="px-8 py-5">Order Reference</th>
-                <th className="px-8 py-5">Placement Date</th>
-                <th className="px-8 py-5">Recipient</th>
-                <th className="px-8 py-5">Amount</th>
-                <th className="px-8 py-5">Lifecycle</th>
+                <th className="px-8 py-5">Registry ID</th>
+                <th className="px-8 py-5">Customer Details</th>
+                <th className="px-8 py-5">Items</th>
+                <th className="px-8 py-5">Investment</th>
+                <th className="px-8 py-5">Status</th>
                 <th className="px-8 py-5 text-right">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-50">
               {filteredOrders.length > 0 ? filteredOrders.map((order) => (
-                <tr key={order.id} className="group hover:bg-stone-50/30 transition-colors">
+                <tr key={order.firebaseId} className="group hover:bg-stone-50/30 transition-colors">
                   <td className="px-8 py-6">
-                    <span className="font-mono text-xs font-bold text-stone-900">{order.id}</span>
+                    <span className="font-mono text-[10px] font-bold text-stone-400">#{order.paymentId?.slice(-8).toUpperCase()}</span>
+                    <p className="text-[10px] text-stone-500 mt-1">{new Date(order.createdAt).toLocaleDateString()}</p>
                   </td>
                   <td className="px-8 py-6">
-                    <div className="flex items-center gap-2 text-stone-500 text-xs font-light italic">
-                      <Clock size={12} /> {order.date}
+                    <p className="text-sm font-bold text-stone-900">{order.customer?.firstName} {order.customer?.lastName}</p>
+                    <p className="text-[10px] text-stone-400">{order.customer?.email}</p>
+                  </td>
+                  <td className="px-8 py-6">
+                    <div className="flex -space-x-2">
+                      {order.items?.map((item: any, i: number) => (
+                        <div key={i} className="w-8 h-10 rounded border border-white bg-stone-100 overflow-hidden shadow-sm" title={item.title}>
+                          <img src={item.img || item.images[0]} className="w-full h-full object-cover" alt="" />
+                        </div>
+                      ))}
+                      {order.items?.length > 3 && (
+                        <div className="w-8 h-10 rounded bg-stone-900 text-white flex items-center justify-center text-[8px] font-bold">
+                          +{order.items.length - 3}
+                        </div>
+                      )}
                     </div>
                   </td>
-                  <td className="px-8 py-6">
-                    <p className="text-sm font-bold text-stone-900">{order.customer}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <div className={`w-1.5 h-1.5 rounded-full ${order.payment === 'Paid' ? 'bg-green-500' : 'bg-orange-400 animate-pulse'}`}></div>
-                      <span className="text-[9px] uppercase tracking-widest text-stone-400 font-bold">{order.payment}</span>
-                    </div>
-                  </td>
-                  <td className="px-8 py-6">
-                    <span className="text-sm font-serif font-bold text-stone-900">₹{order.total.toLocaleString()}</span>
+                  <td className="px-8 py-6 text-sm font-serif font-bold text-stone-900">
+                    ₹{Number(order.amount).toLocaleString()}
                   </td>
                   <td className="px-8 py-6">
                     <select 
-                      value={order.status}
-                      onChange={(e) => updateStatus(order.id, e.target.value)}
-                      className={`text-[9px] font-bold uppercase tracking-widest px-3 py-2 rounded-lg border-none outline-none cursor-pointer shadow-sm transition-all ${
-                        order.status === 'Delivered' ? 'bg-stone-900 text-white' :
-                        order.status === 'Shipped' ? 'bg-orange-500 text-white' :
-                        order.status === 'Processing' ? 'bg-blue-600 text-white' :
+                      value={order.deliveryStatus || 'Processing'}
+                      onChange={(e) => handleUpdateStatus(order.firebaseId, e.target.value)}
+                      className={`text-[9px] font-bold uppercase tracking-widest px-3 py-2 rounded-lg border-none outline-none cursor-pointer transition-all ${
+                        order.deliveryStatus === 'Delivered' ? 'bg-green-100 text-green-700' :
+                        order.deliveryStatus === 'Shipped' ? 'bg-orange-100 text-orange-700' :
                         'bg-stone-100 text-stone-500'
                       }`}
                     >
-                      <option value="Awaiting Payment">Awaiting Payment</option>
                       <option value="Processing">Processing</option>
+                      <option value="Dyeing">In Dyeing</option>
                       <option value="Shipped">Shipped</option>
                       <option value="Delivered">Delivered</option>
                     </select>
                   </td>
                   <td className="px-8 py-6 text-right">
-                    <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                      <button className="p-2.5 bg-white border border-stone-100 rounded-xl text-stone-400 hover:text-red-900 hover:shadow-md transition-all">
-                        <Eye size={16} />
-                      </button>
-                    </div>
+                    <button className="p-2 text-stone-400 hover:text-red-900 transition-colors">
+                      <Eye size={16} />
+                    </button>
                   </td>
                 </tr>
               )) : (
                 <tr>
-                  <td colSpan={6} className="py-20 text-center">
-                    <div className="flex flex-col items-center text-stone-300">
-                      <XCircle size={48} strokeWidth={1} className="mb-4" />
-                      <p className="text-sm italic font-light">No records match your current filters.</p>
-                    </div>
+                  <td colSpan={6} className="py-20 text-center text-stone-300 italic font-light">
+                    <XCircle size={40} className="mx-auto mb-4 opacity-20" />
+                    No orders found in the ledger.
                   </td>
                 </tr>
               )}
