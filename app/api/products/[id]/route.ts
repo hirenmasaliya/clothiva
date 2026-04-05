@@ -4,10 +4,10 @@ import { adminDb } from "@/lib/firebaseAdmin";
 // GET: Fetch single product
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const productId = params.id;
+    const productId = (await params).id;
 
     const snapshot = await adminDb.ref(`products/${productId}`).once("value");
 
@@ -27,11 +27,11 @@ export async function GET(
 // PATCH: Update product
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const body = await request.json();
-    const productId = params.id;
+    const productId = (await params).id;
 
     await adminDb.ref(`products/${productId}`).update({
       ...body,
