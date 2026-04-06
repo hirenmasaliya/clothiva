@@ -9,7 +9,7 @@ export default function ProductDetail() {
       <div className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 lg:grid-cols-2 gap-12">
         {/* Image Gallery */}
         <div className="grid grid-cols-2 gap-4 h-fit">
-          <div className="col-span-2 aspect-[3/4] bg-stone-100">
+          <div className="col-span-2 aspect-3/4 bg-stone-100">
              <img src="https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=1200" className="w-full h-full object-cover" />
           </div>
           <div className="aspect-square bg-stone-100 border border-stone-200 cursor-pointer overflow-hidden">

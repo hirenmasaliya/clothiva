@@ -81,7 +81,7 @@ export default function AddProductPage() {
   };
 
   return (
-    <div className="space-y-10 pb-20 max-w-[1400px] mx-auto">
+    <div className="space-y-10 pb-20 max-w-350 mx-auto">
       
       {/* --- STICKY HEADER --- */}
       <div className="sticky top-20 z-30 bg-stone-50/80 backdrop-blur-md py-4 -mx-4 px-4 border-b border-stone-200/50 flex flex-col md:flex-row md:items-center justify-between gap-6 transition-all">
@@ -175,7 +175,7 @@ export default function AddProductPage() {
               {/* IMAGE PREVIEW GRID */}
               <div className="grid grid-cols-2 gap-3 mt-4">
                 {imageUrls.map((url, i) => (
-                  <div key={i} className="aspect-[3/4] rounded-2xl bg-stone-100 relative group overflow-hidden border border-stone-200 shadow-sm">
+                  <div key={i} className="aspect-3/4 rounded-2xl bg-stone-100 relative group overflow-hidden border border-stone-200 shadow-sm">
                     <img 
                       src={url} 
                       alt={`Product view ${i + 1}`} 

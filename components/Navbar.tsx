@@ -65,9 +65,11 @@ const Navbar = () => {
                     <Link href="/" className="flex flex-col items-center group flex-1">
                         <h1 className={`text-2xl md:text-4xl font-serif tracking-tighter transition-all duration-500 ${logoColor}`}>
                             CLOTHIVA
+                            {/* JK */}
                         </h1>
                         <span className={`text-[8px] uppercase tracking-[0.5em] font-black -mt-1 transition-all duration-500 ${accentColor}`}>
                             Jetpur Heritage
+                            {/* Creation */}
                         </span>
                     </Link>
 
