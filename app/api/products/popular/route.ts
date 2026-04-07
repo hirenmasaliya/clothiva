@@ -1,73 +1,62 @@
 import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebaseAdmin";
 
-interface ProductStats {
-    id: string;
-    name: string;
-    count: number;
-    image: string;
-    price: number;
-}
-
-interface OrderItem {
-    name?: string;
-    title?: string;
-    qty?: number;
-    image?: string;
-    img?: string | string[];
-    images?: string[];
-    price?: number;
-    [key: string]: any;
-}
-
 export async function GET(req: Request) {
     try {
         const { searchParams } = new URL(req.url);
         const limit = Number(searchParams.get("limit")) || 4;
 
-        const ordersRef = adminDb.ref("orders");
-        const snapshot = await ordersRef.once("value");
+        // 1. Fetch Orders and Products nodes
+        const [ordersSnap, productsSnap] = await Promise.all([
+            adminDb.ref("orders").once("value"),
+            adminDb.ref("products").once("value")
+        ]);
 
-        if (!snapshot.exists()) {
-            return NextResponse.json(
-                { success: false, message: "No orders found" },
-                { status: 404 }
-            );
+        if (!ordersSnap.exists()) {
+            return NextResponse.json({ success: false, message: "No orders found" }, { status: 404 });
         }
 
-        const productCounts: Record<string, ProductStats> = {};
-        const allOrders = snapshot.val() as Record<string, any>;
+        const allOrders = ordersSnap.val();
+        const allProducts = productsSnap.val() || {};
 
-        Object.values(allOrders).forEach((order) => {
+        // This will track: { "productId": quantity }
+        const productSales: Record<string, number> = {};
+
+        // 2. Iterate through orders and their items array
+        Object.values(allOrders).forEach((order: any) => {
+            // Check if items exists and is an array/object
             if (!order?.items) return;
 
-            Object.entries(order.items as Record<string, OrderItem>).forEach(
-                ([id, details]) => {
-                    const qty = Number(details?.qty) || 0;
+            const itemsArray = Array.isArray(order.items)
+                ? order.items
+                : Object.values(order.items);
 
-                    if (productCounts[id]) {
-                        productCounts[id].count += qty;
-                    } else {
-                        // Resolve Image (Checks multiple common Firebase naming conventions)
-                        const resolvedImage = Array.isArray(details?.images) ? details.images[0] 
-                                            : Array.isArray(details?.img) ? details.img[0] 
-                                            : details?.image || details?.img || "";
+            itemsArray.forEach((item: any) => {
+                const productId = item?.id;
+                if (!productId) return;
 
-                        productCounts[id] = {
-                            id,
-                            name: details?.title || details?.name || "Unknown Product",
-                            count: qty,
-                            image: resolvedImage,
-                            price: Number(details?.price) || 0, // ✅ Fixed: details.price
-                        };
-                    }
-                }
-            );
+                // Sum up quantities (default to 1 if qty isn't provided)
+                const qty = Number(item?.qty) || 1;
+                productSales[productId] = (productSales[productId] || 0) + qty;
+            });
         });
 
-        const sortedProducts = Object.values(productCounts).sort(
-            (a, b) => b.count - a.count
-        );
+        // 3. Enrich with live data from the 'products' node
+        const detailedProducts = Object.entries(productSales)
+            .map(([id, totalQty]) => {
+                const liveProduct = allProducts[id];
+                if (!liveProduct) return null;
+
+                return {
+                    ...liveProduct,
+                    id,            
+                    count: totalQty,
+                };
+            })
+            .filter(Boolean);
+
+        // 4. Sort by most sold
+        const sortedProducts = detailedProducts.sort((a, b) => b.count - a.count);
 
         return NextResponse.json({
             success: true,
@@ -78,14 +67,9 @@ export async function GET(req: Request) {
         });
 
     } catch (error: any) {
-        console.error("Popular Product API Error:", error);
-
+        console.error("API Error:", error);
         return NextResponse.json(
-            {
-                success: false,
-                message: "Something went wrong",
-                error: error?.message || "Unknown error",
-            },
+            { success: false, error: error?.message },
             { status: 500 }
         );
     }

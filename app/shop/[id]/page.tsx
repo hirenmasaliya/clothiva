@@ -64,7 +64,7 @@ export default function ProductDetails() {
 
           {/* --- LEFT: GALLERY (The Canvas) --- */}
           <div className="lg:col-span-7 space-y-6">
-            <div className="relative aspect-[3/4] rounded-[2.5rem] overflow-hidden bg-stone-100 shadow-2xl group">
+            <div className="relative aspect-3/4 rounded-[2.5rem] overflow-hidden bg-stone-100 shadow-2xl group">
               <img
                 src={product.images?.[activeImg]}
                 className="w-full h-full object-cover object-top transition-transform duration-[5s] group-hover:scale-110"
@@ -81,7 +81,7 @@ export default function ProductDetails() {
                 <button
                   key={i}
                   onClick={() => setActiveImg(i)}
-                  className={`relative w-20 md:w-28 aspect-[3/4] rounded-2xl overflow-hidden border-2 transition-all shrink-0 ${activeImg === i ? 'border-red-900 scale-105 shadow-xl' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                  className={`relative w-20 md:w-28 aspect-3/4 rounded-2xl overflow-hidden border-2 transition-all shrink-0 ${activeImg === i ? 'border-red-900 scale-105 shadow-xl' : 'border-transparent opacity-60 hover:opacity-100'}`}
                 >
                   <img src={img} className="w-full h-full object-cover" alt="" />
                 </button>

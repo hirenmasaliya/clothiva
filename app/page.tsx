@@ -5,18 +5,24 @@ import {
   History, Fingerprint, Waves, Sun, ShieldCheck, Heart, Coffee, Anchor
 } from 'lucide-react';
 import Link from 'next/link';
+import { useCart } from '@/context/CartContext';
 
 interface Product {
   id: string;
-  name: string;
+  title: string;
   count: number;
-  price?: number;
-  image?: string;
+  price: number;
+  images: string[];
+  category?: string;
+  description?: string;
+  stock?: number;
+  status?: string;
 }
 
 export default function Home() {
   const [popularProducts, setPopularProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const { addToCart } = useCart();
 
   const fetchPopular = useCallback(async () => {
     try {
@@ -82,21 +88,21 @@ export default function Home() {
         <div className="grid md:grid-cols-3 gap-12 text-center">
           <div className="space-y-4">
             <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto">
-                <Heart className="text-red-800" fill="currentColor" size={24} />
+              <Heart className="text-red-800" fill="currentColor" size={24} />
             </div>
             <h4 className="font-serif text-2xl text-stone-900">Ma No Prem</h4>
             <p className="text-sm text-stone-500 leading-relaxed">Like a mother's touch—gentle and pure. Every thread is woven with the same care she puts into her daily prayers.</p>
           </div>
           <div className="space-y-4 border-x border-stone-100 px-8">
             <div className="w-16 h-16 bg-yellow-50 rounded-full flex items-center justify-center mx-auto">
-                <Sun className="text-yellow-700" size={24} />
+              <Sun className="text-yellow-700" size={24} />
             </div>
             <h4 className="font-serif text-2xl text-stone-900">Saurashtra’s Sun</h4>
             <p className="text-sm text-stone-500 leading-relaxed">Our fabrics are dried naturally under the golden Gujarat sun, locking in colors that stay vibrant for generations.</p>
           </div>
           <div className="space-y-4">
             <div className="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center mx-auto">
-                <Coffee className="text-orange-800" size={24} />
+              <Coffee className="text-orange-800" size={24} />
             </div>
             <h4 className="font-serif text-2xl text-stone-900">Asli Parampara</h4>
             <p className="text-sm text-stone-500 leading-relaxed">No mass machinery. Just slow, rhythmic artistry by hand, celebrating the authentic 'Knot' of Bandhani.</p>
@@ -134,10 +140,10 @@ export default function Home() {
           </div>
           <div className="relative order-1 md:order-2">
             <div className="absolute -inset-4 border border-stone-200 rounded-[4rem] rotate-3 -z-10"></div>
-            <img 
-              src="https://5.imimg.com/data5/YE/AN/PT/SELLER-22984508/cotton-satin-fabric.jpg" 
-              className="w-full aspect-[4/5] object-cover rounded-[3rem] shadow-2xl" 
-              alt="Premium Satin Cotton" 
+            <img
+              src="https://5.imimg.com/data5/YE/AN/PT/SELLER-22984508/cotton-satin-fabric.jpg"
+              className="w-full aspect-[4/5] object-cover rounded-[3rem] shadow-2xl"
+              alt="Premium Satin Cotton"
             />
             <div className="absolute -bottom-6 -right-6 bg-white p-6 rounded-2xl shadow-xl border border-stone-50 hidden md:block">
               <p className="text-[24px] font-serif text-red-900 leading-none">80g</p>
@@ -165,16 +171,16 @@ export default function Home() {
               [...Array(4)].map((_, i) => <div key={i} className="aspect-3/4 bg-stone-200 animate-pulse rounded-3xl" />)
             ) : popularProducts.map((item, idx) => (
               <div key={item.id} className="group">
-                <div className="relative aspect-[3/4.5] rounded-[2.5rem] overflow-hidden mb-6 bg-white shadow-sm hover:shadow-2xl transition-all duration-500">
-                  <div className="absolute top-5 left-5 z-20 bg-yellow-500 text-black text-[8px] font-black px-3 py-1.5 rounded-full tracking-widest">
+                <div className="relative aspect-3/4.5 rounded-[2.5rem] overflow-hidden mb-6 bg-white shadow-sm hover:shadow-2xl transition-all duration-500">
+                  <div className="absolute top-5 left-5 z-20 bg-yellow-500 text-black text-[6px] font-black px-3 py-1.5 rounded-full tracking-widest">
                     #{idx + 1} MOST LOVED
                   </div>
-                  <img src={item.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-6">
-                    <button className="w-full bg-white text-stone-900 py-4 text-[10px] font-bold uppercase rounded-2xl shadow-xl">Take it Home</button>
+                  <img src={item.images[0]} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" />
+                  <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-6">
+                    <button onClick={() => addToCart(item)} className="w-full bg-white text-stone-900 py-4 text-[10px] font-bold uppercase rounded-2xl shadow-xl">Take it Home</button>
                   </div>
                 </div>
-                <h3 className="text-md font-serif text-stone-800">{item.name}</h3>
+                <h3 className="text-md font-serif text-stone-800">{item.title}</h3>
                 <div className="flex justify-between items-center mt-2">
                   <p className="text-sm font-bold text-red-950">₹{item.price}</p>
                   <span className="text-[9px] text-stone-400 font-bold uppercase">{item.count} Sold recently</span>
@@ -209,11 +215,11 @@ export default function Home() {
             </div>
           </div>
           <div className="relative">
-             <div className="absolute -top-10 -right-10 w-64 h-64 bg-red-900/20 blur-[100px] rounded-full"></div>
-             <div className="grid grid-cols-2 gap-4">
-                <img src="https://cdn.shopify.com/s/files/1/0902/3202/files/Bandhani-process_large.jpg?v=1533699306" className="w-full aspect-[4/5] object-cover rounded-3xl" />
-                <img src="https://villagehaat.store/wp-content/uploads/2022/02/image.jpg.webp" className="w-full aspect-[4/5] object-cover rounded-3xl mt-12" />
-             </div>
+            <div className="absolute -top-10 -right-10 w-64 h-64 bg-red-900/20 blur-[100px] rounded-full"></div>
+            <div className="grid grid-cols-2 gap-4">
+              <img src="https://cdn.shopify.com/s/files/1/0902/3202/files/Bandhani-process_large.jpg?v=1533699306" className="w-full aspect-[4/5] object-cover rounded-3xl" />
+              <img src="https://villagehaat.store/wp-content/uploads/2022/02/image.jpg.webp" className="w-full aspect-[4/5] object-cover rounded-3xl mt-12" />
+            </div>
           </div>
         </div>
       </section>
@@ -245,8 +251,8 @@ export default function Home() {
       {/* Footer */}
       <div className="py-20 px-6 flex flex-col md:flex-row justify-between items-center gap-10 max-w-7xl mx-auto">
         <div className="space-y-2 text-center md:text-left">
-            <p className="text-lg font-serif text-stone-800 italic">Clothiva Heritage</p>
-            <p className="text-[9px] uppercase tracking-[0.4em] text-stone-400 font-bold">© 2026 Crafted with love in Jetpur, Gujarat</p>
+          <p className="text-lg font-serif text-stone-800 italic">Clothiva Heritage</p>
+          <p className="text-[9px] uppercase tracking-[0.4em] text-stone-400 font-bold">© 2026 Crafted with love in Jetpur, Gujarat</p>
         </div>
         <div className="flex gap-12">
           <Link href="#" className="text-[10px] uppercase tracking-[0.2em] text-stone-500 font-bold hover:text-red-900 transition-colors">Our Story</Link>

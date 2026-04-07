@@ -125,7 +125,7 @@ export default function CartPage() {
 
   return (
     <main className="bg-[#FCFAF8] min-h-screen pt-32 md:pt-44 pb-32 antialiased selection:bg-red-900 selection:text-white">
-      <div className="max-w-[1400px] mx-auto px-6 md:px-12">
+      <div className="max-w-350 mx-auto px-6 md:px-12">
         
         {/* --- PAGE HEADER --- */}
         <header className="mb-16 border-b border-stone-200 pb-12 flex justify-between items-end">

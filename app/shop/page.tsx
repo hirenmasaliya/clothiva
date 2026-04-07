@@ -28,7 +28,7 @@ const ProductCard = ({ product, router }: { product: any, router: any }) => {
             className="group cursor-pointer flex flex-col animate-in fade-in slide-in-from-bottom-6 duration-1000" 
             onClick={() => router.push(`/shop/${product.id}`)}
         >
-            <div className="relative aspect-[2/3] w-full overflow-hidden rounded-[2.5rem] bg-stone-100 shadow-sm transition-all duration-700 group-hover:shadow-2xl group-hover:-translate-y-2">
+            <div className="relative aspect-2/3 w-full overflow-hidden rounded-[2.5rem] bg-stone-100 shadow-sm transition-all duration-700 group-hover:shadow-2xl group-hover:-translate-y-2">
                 {/* Product Image */}
                 <img
                     key={currentImgIndex}
@@ -142,7 +142,7 @@ export default function ShopPage() {
                 </div>
             </header>
 
-            <div className="max-w-[1600px] mx-auto px-6 md:px-12 flex flex-col lg:flex-row gap-16">
+            <div className="max-w-400 mx-auto px-6 md:px-12 flex flex-col lg:flex-row gap-16">
                 
                 {/* --- SIDEBAR: HERITAGE FILTERS --- */}
                 <aside className="hidden lg:block w-72 shrink-0 space-y-12 sticky top-38 h-fit">
