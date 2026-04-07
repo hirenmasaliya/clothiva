@@ -36,6 +36,7 @@ const Navbar = () => {
     // Updated Navigation Links
     const navLinks = [
         { name: 'Collections', href: '/shop' },
+        { name: 'Bulk Orders', href: '/bulk-orders' },
         { name: 'Our Story', href: '/story' },
         { name: 'Privacy', href: '/privacy' },
         { name: 'Terms', href: '/terms' },
