@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://clothiva-amber.vercel.app'
+  const baseUrl = 'https://clothivaelite.vercel.app'
 
   // Core Marketing Routes
   const routes = [
