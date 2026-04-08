@@ -179,7 +179,7 @@ export default function OrdersPage() {
                     </div>
                   </td>
                   <td className="px-8 py-6 text-sm font-serif font-bold text-stone-900">
-                    ₹{Number(order.amount).toLocaleString()}
+                    ₹{Number(order.amount || order.breakdown.total).toLocaleString()}
                   </td>
                   <td className="px-8 py-6">
                     <select 

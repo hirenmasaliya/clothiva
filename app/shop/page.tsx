@@ -87,7 +87,7 @@ export default function ShopPage() {
     const [maxPrice, setMaxPrice] = useState(25000);
     const [sortBy, setSortBy] = useState('newest');
 
-    const categories = ["Gaji Silk (Premium)", "Cotton Bandhni", "Pure Georgette", "Modal Silk"];
+    const categories = ["Sartin Cotton", "Cotton Bandhni", "Pure Georgette", "Modal Silk"];
 
     useEffect(() => {
         const fetchProducts = async () => {
@@ -117,7 +117,7 @@ export default function ShopPage() {
         <main className="bg-[#FFFDFB] min-h-screen pt-32 md:pt-48 antialiased selection:bg-red-900 selection:text-white">
             
             {/* --- HERO HEADER: TOUCH OF HEART --- */}
-            <header className="px-6 md:px-12 max-w-[1600px] mx-auto mb-20 text-center">
+            <header className="px-6 md:px-12 max-w-400 mx-auto mb-20 text-center">
                 <nav className="text-[9px] uppercase tracking-[0.4em] text-stone-400 flex items-center justify-center gap-2 font-bold mb-6">
                     <a href="/" className="hover:text-red-900">The Beginning</a>
                     <ChevronRight size={10} />
@@ -210,7 +210,7 @@ export default function ShopPage() {
                         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-12">
                             {[1, 2, 3].map(i => (
                                 <div key={i} className="space-y-6 animate-pulse">
-                                    <div className="aspect-[2/3] bg-stone-100 rounded-[2.5rem]" />
+                                    <div className="aspect-2/3 bg-stone-100 rounded-[2.5rem]" />
                                     <div className="h-4 bg-stone-100 w-3/4 mx-auto rounded-full" />
                                 </div>
                             ))}
@@ -237,7 +237,7 @@ export default function ShopPage() {
             {/* --- MOBILE DRAWER (SOULFUL) --- */}
             <div className={`fixed inset-0 z-[200] lg:hidden transition-all duration-700 ${isMobileFilterOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`}>
                 <div className="absolute inset-0 bg-red-950/20 backdrop-blur-md" onClick={() => setMobileFilterOpen(false)} />
-                <div className={`absolute right-0 top-0 bottom-0 w-full sm:w-[400px] bg-[#FFFDFB] shadow-2xl flex flex-col transition-transform duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] ${isMobileFilterOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+                <div className={`absolute right-0 top-0 bottom-0 w-full sm:w-100 bg-[#FFFDFB] shadow-2xl flex flex-col transition-transform duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] ${isMobileFilterOpen ? 'translate-x-0' : 'translate-x-full'}`}>
                     
                     <div className="p-10 flex flex-col h-full">
                         <div className="flex justify-between items-center mb-16">

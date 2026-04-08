@@ -46,8 +46,8 @@ const Navbar = () => {
 
     return (
         <>
-            <nav className={`fixed w-full z-[100] transition-all duration-700 ease-in-out px-6 md:px-12 ${navBg}`}>
-                <div className="max-w-[1600px] mx-auto flex justify-between items-center">
+            <nav className={`fixed w-full z-100 transition-all duration-700 ease-in-out px-6 md:px-12 ${navBg}`}>
+                <div className="max-w-400 mx-auto flex justify-between items-center">
 
                     {/* --- LEFT NAVIGATION --- */}
                     <div className="flex-1 hidden lg:flex items-center space-x-10">
@@ -103,7 +103,7 @@ const Navbar = () => {
             </nav>
 
             {/* --- SEARCH OVERLAY --- */}
-            <div className={`fixed inset-0 z-[200] bg-white transition-all duration-700 flex flex-col items-center justify-center px-6 ${isSearchOpen ? 'translate-y-0' : '-translate-y-full'}`}>
+            <div className={`fixed inset-0 z-200 bg-white transition-all duration-700 flex flex-col items-center justify-center px-6 ${isSearchOpen ? 'translate-y-0' : '-translate-y-full'}`}>
                 <button onClick={() => setIsSearchOpen(false)} className="absolute top-10 right-10 p-4 bg-stone-50 rounded-full text-stone-400 hover:text-red-900 transition-all">
                     <X size={24} />
                 </button>
@@ -119,7 +119,7 @@ const Navbar = () => {
             </div>
 
             {/* --- MOBILE DRAWER --- */}
-            <div className={`fixed inset-0 z-[300] transition-all duration-700 ${isOpen ? 'visible' : 'invisible'}`}>
+            <div className={`fixed inset-0 z-300 transition-all duration-700 ${isOpen ? 'visible' : 'invisible'}`}>
                 <div className={`absolute inset-0 bg-stone-950/40 backdrop-blur-sm transition-opacity duration-700 ${isOpen ? 'opacity-100' : 'opacity-0'}`} onClick={() => setIsOpen(false)} />
                 <div className={`absolute left-0 top-0 bottom-0 w-[85%] bg-white p-12 flex flex-col transition-transform duration-700 cubic-bezier(0.16, 1, 0.3, 1) ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
                     <div className="flex justify-between items-center mb-16">

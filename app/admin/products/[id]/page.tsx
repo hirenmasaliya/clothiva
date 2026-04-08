@@ -74,7 +74,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
   );
 
   return (
-    <div className="space-y-10 pb-20 max-w-[1400px] mx-auto animate-in fade-in duration-700 p-6">
+    <div className="space-y-10 pb-20 max-w-350 mx-auto animate-in fade-in duration-700 p-6">
       
       {/* --- STICKY HEADER --- */}
       <div className="sticky top-0 z-30 bg-stone-50/80 backdrop-blur-md py-4 -mx-6 px-6 border-b border-stone-200/50 transition-all">
@@ -94,7 +94,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
             <Link href={`/shop/${productId}`} target="_blank" className="p-3 text-stone-400 hover:text-red-900 transition-all">
               <Eye size={20} strokeWidth={1.5} />
             </Link>
-            <div className="h-8 w-[1px] bg-stone-200 mx-2"></div>
+            <div className="h-8 w-px bg-stone-200 mx-2"></div>
             <button 
               onClick={handleSave}
               disabled={saving}
@@ -174,7 +174,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
             <div className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 {imageUrls.map((url, i) => (
-                    <div key={i} className="aspect-[3/4] rounded-xl bg-stone-100 relative group overflow-hidden border border-stone-100 shadow-sm">
+                    <div key={i} className="aspect-3/4 rounded-xl bg-stone-100 relative group overflow-hidden border border-stone-100 shadow-sm">
                         <img src={url} className="w-full h-full object-cover" alt="" />
                         <div className="absolute inset-0 bg-stone-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                             <button 
@@ -214,7 +214,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                 onChange={handleChange}
                 className="w-full p-4 bg-stone-50 border border-stone-100 rounded-xl outline-none text-sm font-bold appearance-none"
               >
-                <option>Gaji Silk (Premium)</option>
+                <option>Sartin Cotton</option>
                 <option>Cotton Bandhni</option>
                 <option>Pure Georgette</option>
               </select>

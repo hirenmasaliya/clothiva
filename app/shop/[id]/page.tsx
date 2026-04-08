@@ -97,7 +97,7 @@ export default function ProductDetails() {
               <div className="flex justify-between items-start">
                 <div className="space-y-2">
                   <p className="text-[10px] uppercase tracking-[0.4em] font-black text-red-800 italic">Asli Parampara</p>
-                  <h1 className="text-4xl xl:text-7xl font-serif text-stone-900 leading-[0.9] tracking-tighter italic">
+                  <h1 className="text-4xl xl:text-4xl font-serif text-stone-900 leading-[0.9] tracking-tighter italic">
                     {product.title}
                   </h1>
                 </div>

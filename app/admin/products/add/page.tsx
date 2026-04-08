@@ -198,7 +198,7 @@ export default function AddProductPage() {
             <div className="space-y-2">
               <label className="text-[10px] uppercase tracking-widest font-bold text-stone-400">Fabric Base</label>
               <select name="category" value={formData.category} onChange={handleChange} className="w-full p-4 bg-stone-50 border border-stone-100 rounded-xl outline-none text-sm font-medium">
-                <option>Gaji Silk (Premium)</option>
+                <option>Sartin Cotton</option>
                 <option>Cotton Bandhni</option>
                 <option>Pure Georgette</option>
               </select>
