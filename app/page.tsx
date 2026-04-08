@@ -116,7 +116,7 @@ export default function Home() {
           <div className="space-y-8 order-2 md:order-1">
             <div className="flex items-center gap-4">
               <span className="bg-red-800 text-white px-3 py-1 text-[9px] font-black uppercase tracking-tighter rounded">Artisan Choice</span>
-              <span className="text-[10px] uppercase tracking-widest font-black text-stone-400 tracking-[0.3em]">Pure Satin Cotton</span>
+              <span className="text-[10px] uppercase tracking-widest font-black text-stone-400">Pure Satin Cotton</span>
             </div>
             <h2 className="text-5xl font-serif text-stone-900 tracking-tighter">
               As Smooth as <br />
@@ -142,7 +142,7 @@ export default function Home() {
             <div className="absolute -inset-4 border border-stone-200 rounded-[4rem] rotate-3 -z-10"></div>
             <img
               src="https://5.imimg.com/data5/YE/AN/PT/SELLER-22984508/cotton-satin-fabric.jpg"
-              className="w-full aspect-[4/5] object-cover rounded-[3rem] shadow-2xl"
+              className="w-full aspect-4/5 object-cover rounded-[3rem] shadow-2xl"
               alt="Premium Satin Cotton"
             />
             <div className="absolute -bottom-6 -right-6 bg-white p-6 rounded-2xl shadow-xl border border-stone-50 hidden md:block">
@@ -217,8 +217,8 @@ export default function Home() {
           <div className="relative">
             <div className="absolute -top-10 -right-10 w-64 h-64 bg-red-900/20 blur-[100px] rounded-full"></div>
             <div className="grid grid-cols-2 gap-4">
-              <img src="https://cdn.shopify.com/s/files/1/0902/3202/files/Bandhani-process_large.jpg?v=1533699306" className="w-full aspect-[4/5] object-cover rounded-3xl" />
-              <img src="https://villagehaat.store/wp-content/uploads/2022/02/image.jpg.webp" className="w-full aspect-[4/5] object-cover rounded-3xl mt-12" />
+              <img src="https://cdn.shopify.com/s/files/1/0902/3202/files/Bandhani-process_large.jpg?v=1533699306" className="w-full aspect-4/5 object-cover rounded-3xl" />
+              <img src="https://villagehaat.store/wp-content/uploads/2022/02/image.jpg.webp" className="w-full aspect-4/5 object-cover rounded-3xl mt-12" />
             </div>
           </div>
         </div>

@@ -53,10 +53,10 @@ export default function ProductDetails() {
             <ChevronLeft size={14} />
             Back to Virasat
           </button>
-          
+
           <div className="flex items-center gap-4 bg-red-50/50 px-6 py-2 rounded-full border border-red-100/50">
-             <MapPin size={12} className="text-red-800" />
-             <span className="text-[9px] uppercase tracking-[0.2em] font-black text-red-900">Directly from the Vats of Jetpur, Gujarat</span>
+            <MapPin size={12} className="text-red-800" />
+            <span className="text-[9px] uppercase tracking-[0.2em] font-black text-red-900">Directly from the Vats of Jetpur, Gujarat</span>
           </div>
         </div>
 
@@ -71,8 +71,8 @@ export default function ProductDetails() {
                 alt={product.title}
               />
               <div className="absolute bottom-8 left-8 bg-white/90 backdrop-blur-md px-6 py-3 rounded-2xl shadow-xl flex items-center gap-3">
-                 <Sparkles size={16} className="text-yellow-600" />
-                 <p className="text-[10px] font-black uppercase tracking-widest text-stone-800">Genuine Hand-Knotted Bandhej</p>
+                <Sparkles size={16} className="text-yellow-600" />
+                <p className="text-[10px] font-black uppercase tracking-widest text-stone-800">Genuine Hand-Knotted Bandhej</p>
               </div>
             </div>
 
@@ -97,11 +97,11 @@ export default function ProductDetails() {
               <div className="flex justify-between items-start">
                 <div className="space-y-2">
                   <p className="text-[10px] uppercase tracking-[0.4em] font-black text-red-800 italic">Asli Parampara</p>
-                  <h1 className="text-5xl xl:text-7xl font-serif text-stone-900 leading-[0.9] tracking-tighter italic">
+                  <h1 className="text-4xl xl:text-7xl font-serif text-stone-900 leading-[0.9] tracking-tighter italic">
                     {product.title}
                   </h1>
                 </div>
-                <button 
+                <button
                   onClick={() => setIsLiked(!isLiked)}
                   className={`p-4 rounded-full border transition-all ${isLiked ? 'bg-red-50 border-red-200 text-red-900' : 'bg-white border-stone-100 text-stone-300'}`}
                 >
@@ -165,24 +165,30 @@ export default function ProductDetails() {
             </div>
 
             {/* Dadi's Wisdom / Care Card */}
-            <div className="mb-10 p-6 bg-stone-900 rounded-[2rem] text-white flex items-center justify-between">
-               <div className="flex items-center gap-4">
-                  <div className="p-3 bg-white/10 rounded-full text-yellow-500"><Info size={20} /></div>
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-white/50">Dadi's Wisdom</p>
-                    <p className="text-xs italic">"Dry clean only, beta. This gold deserves to last forever."</p>
-                  </div>
-               </div>
+            <div className="mb-10 p-6 bg-stone-900 rounded-4xl text-white flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-white/10 rounded-full text-yellow-500"><Info size={20} /></div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-white/50">Dadi's Wisdom</p>
+                  <p className="text-xs italic">"Dry clean only, beta. This gold deserves to last forever."</p>
+                </div>
+              </div>
             </div>
 
             {/* Action Area */}
             <div className="space-y-8">
               <button
                 onClick={() => addToCart(product)}
-                className="w-full bg-red-950 text-white py-8 rounded-[2.5rem] text-xs font-black uppercase tracking-[0.5em] hover:bg-stone-900 transition-all shadow-2xl active:scale-95 flex items-center justify-center gap-4 group"
+                className="w-full bg-red-950 text-white py-4 md:py-6 rounded-full text-[8px] md:text-xs font-black uppercase tracking-[0.2em] md:tracking-[0.5em] hover:bg-stone-900 transition-all shadow-2xl active:scale-95 flex items-center justify-center gap-3 md:gap-4 group px-6"
               >
-                <ShoppingBag size={18} />
-                Padharo — Bring it Home
+                {/* Slightly smaller icon for mobile to match the small text */}
+                <ShoppingBag size={14} className="md:w-4.5 md:h-4.5 shrink-0" />
+
+                {/* Mobile Text: Short & Punchy (8px) */}
+                <span className="inline md:hidden">Add Cart</span>
+
+                {/* Desktop Text: Full Experience (12px) */}
+                <span className="hidden md:inline">Padharo — Bring it Home</span>
               </button>
 
               <div className="grid grid-cols-3 gap-4">
@@ -203,12 +209,12 @@ export default function ProductDetails() {
 
             {/* Social Proof */}
             <div className="mt-12 flex items-center justify-center gap-4 text-stone-400">
-               <div className="flex -space-x-3">
-                  {[...Array(3)].map((_, i) => (
-                    <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-stone-200"></div>
-                  ))}
-               </div>
-               <p className="text-[10px] font-bold uppercase tracking-widest">Loved by 400+ Bandhani families</p>
+              <div className="flex -space-x-3">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-stone-200"></div>
+                ))}
+              </div>
+              <p className="text-[10px] font-bold uppercase tracking-widest">Loved by 400+ Bandhani families</p>
             </div>
           </div>
         </div>
