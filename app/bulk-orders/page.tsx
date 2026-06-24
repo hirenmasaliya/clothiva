@@ -67,14 +67,14 @@ const BulkOrders = () => {
                         {loading ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8 animate-pulse">
                                 {[1, 2, 3].map((n) => (
-                                    <div key={n} className="bg-gray-50 aspect-[3/4]"></div>
+                                    <div key={n} className="bg-gray-50 aspect-3/4"></div>
                                 ))}
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-x-6 gap-y-12">
                                 {products.map((item) => (
                                     <div key={item.id} className="group relative">
-                                        <div className="relative aspect-[3/4] overflow-hidden bg-[#FBFBFA] grayscale-[30%] group-hover:grayscale-0 transition-all duration-700">
+                                        <div className="relative aspect-3/4 overflow-hidden bg-[#FBFBFA] grayscale-30 group-hover:grayscale-0 transition-all duration-700">
                                             <img
                                                 src={item.images && item.images[0] ? item.images[0] : '/placeholder.jpg'}
                                                 alt={item.title}

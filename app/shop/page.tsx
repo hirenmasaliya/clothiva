@@ -198,7 +198,7 @@ export default function ShopPage() {
                 </aside>
 
                 {/* --- MOBILE REFINEMENT BUTTON --- */}
-                <div className="lg:hidden fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] w-full px-6 max-w-sm">
+                <div className="lg:hidden fixed bottom-10 left-1/2 -translate-x-1/2 z-100 w-full px-6 max-w-sm">
                     <button onClick={() => setMobileFilterOpen(true)} className="w-full flex items-center justify-center gap-4 bg-red-950 text-white py-5 px-8 rounded-2xl text-[10px] uppercase tracking-[0.3em] font-bold shadow-2xl backdrop-blur-md bg-opacity-95">
                         <SlidersHorizontal size={14} /> Refine Collection
                     </button>
@@ -235,7 +235,7 @@ export default function ShopPage() {
             </div>
 
             {/* --- MOBILE DRAWER (SOULFUL) --- */}
-            <div className={`fixed inset-0 z-[200] lg:hidden transition-all duration-700 ${isMobileFilterOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`}>
+            <div className={`fixed inset-0 z-200 lg:hidden transition-all duration-700 ${isMobileFilterOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`}>
                 <div className="absolute inset-0 bg-red-950/20 backdrop-blur-md" onClick={() => setMobileFilterOpen(false)} />
                 <div className={`absolute right-0 top-0 bottom-0 w-full sm:w-100 bg-[#FFFDFB] shadow-2xl flex flex-col transition-transform duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] ${isMobileFilterOpen ? 'translate-x-0' : 'translate-x-full'}`}>
                     
