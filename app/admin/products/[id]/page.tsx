@@ -1,231 +1,167 @@
 "use client";
-import React, { useState, useEffect, use } from 'react'; // Import 'use' for params
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { CldUploadWidget } from 'next-cloudinary';
-import { 
-  Save, ChevronRight, Type, IndianRupee, 
-  Image as ImageIcon, Trash2, Eye, 
-  Loader2, CheckCircle2 
-} from 'lucide-react';
+// Place at: app/admin/products/[id]/page.tsx
+import React, { useState, useEffect, useCallback, use } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { RefreshCw, Trash2 } from "lucide-react";
+import ProductForm, { ConfirmDialog, FOCUS, ProductValues } from "@/components/admin/ProductForm";
 
 export default function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
-  // 1. Unwrap the params using React.use()
-  const resolvedParams = use(params);
-  const productId = resolvedParams.id;
-  
+  const { id: productId } = use(params);
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [imageUrls, setImageUrls] = useState<string[]>([]);
-  const [formData, setFormData] = useState<any>({
-    title: '',
-    description: '',
-    price: '',
-    stock: '',
-    category: 'Gaji Silk (Premium)'
-  });
 
-  // 2. Fetch Existing Data
-  useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        const res = await fetch(`/api/products/${productId}`);
-        const data = await res.json();
-        setFormData(data);
-        setImageUrls(data.images || []);
-      } catch (err) {
-        console.error("Failed to load product", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    if (productId) fetchProduct();
+  const [initial, setInitial] = useState<ProductValues | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<"failed" | "notfound" | null>(null);
+
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const res = await fetch(`/api/products/${productId}`);
+      if (res.status === 404) return setLoadError("notfound");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (!data || data.error) return setLoadError("notfound");
+      setInitial({
+        title: data.title ?? "",
+        description: data.description ?? "",
+        price: data.price != null ? String(data.price) : "",
+        comparePrice: data.comparePrice != null && data.comparePrice !== "" ? String(data.comparePrice) : "",
+        stock: data.stock != null ? String(data.stock) : "",
+        sku: data.sku ?? "",
+        category: data.category ?? "",
+        isFeatured: Boolean(data.isFeatured),
+        images: Array.isArray(data.images) ? data.images : [],
+      });
+    } catch (err) {
+      console.error("Failed to load product", err);
+      setLoadError("failed");
+    } finally {
+      setLoading(false);
+    }
   }, [productId]);
 
-  const handleChange = (e: any) => {
-    const { name, value } = e.target;
-    setFormData((prev: any) => ({ ...prev, [name]: value }));
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const handleSave = async (values: ProductValues) => {
+    const res = await fetch(`/api/products/${productId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...values, // includes `images`, which the update endpoint expects
+        price: Number(values.price),
+        comparePrice: values.comparePrice === "" ? "" : Number(values.comparePrice),
+        stock: Number(values.stock),
+      }),
+    });
+    if (!res.ok) {
+      let message = "We couldn’t save your changes. Please try again.";
+      try {
+        const body = await res.json();
+        if (body?.error) message = body.error;
+      } catch { /* keep default message */ }
+      throw new Error(message);
+    }
+    router.push("/admin/products");
+    router.refresh();
   };
 
-  const handleSave = async () => {
-    setSaving(true);
+  const handleDelete = async () => {
+    setDeleting(true);
+    setDeleteError(null);
     try {
-      const res = await fetch(`/api/products/${productId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, images: imageUrls }),
-      });
-      if (res.ok) {
-        router.push('/admin/products');
-        router.refresh(); // Refresh data on inventory page
-      }
-    } catch (err) {
-      alert("Failed to save changes");
-    } finally {
-      setSaving(false);
+      const res = await fetch(`/api/products/${productId}`, { method: "DELETE" });
+      if (!res.ok) throw new Error();
+      router.push("/admin/products");
+      router.refresh();
+    } catch {
+      setDeleteError("We couldn’t delete this product. Please try again.");
+      setDeleting(false);
     }
   };
 
-  if (loading) return (
-    <div className="h-screen flex items-center justify-center bg-stone-50">
-      <Loader2 className="animate-spin text-red-900" size={32} />
-    </div>
-  );
+  if (loading) {
+    return (
+      <div role="status" aria-label="Loading product" aria-busy="true" className="mx-auto grid max-w-350 gap-8 lg:grid-cols-12">
+        <div className="space-y-8 lg:col-span-8">
+          <div className="h-72 animate-pulse rounded-2xl bg-stone-100 motion-reduce:animate-none" />
+          <div className="h-56 animate-pulse rounded-2xl bg-stone-100 motion-reduce:animate-none" />
+        </div>
+        <div className="lg:col-span-4">
+          <div className="h-96 animate-pulse rounded-2xl bg-stone-100 motion-reduce:animate-none" />
+        </div>
+      </div>
+    );
+  }
+
+  if (loadError || !initial) {
+    return (
+      <div className="mx-auto max-w-md rounded-2xl border border-stone-200 bg-white p-10 text-center">
+        <h1 className="font-serif text-2xl text-stone-900">
+          {loadError === "notfound" ? "This product doesn’t exist" : "We couldn’t load this product"}
+        </h1>
+        <p className="mt-2 text-base text-stone-600">
+          {loadError === "notfound" ? "It may have been deleted." : "Check your connection and try again."}
+        </p>
+        <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+          {loadError !== "notfound" && (
+            <button type="button" onClick={load} className={`inline-flex h-11 items-center justify-center gap-2 rounded-full bg-red-900 px-6 text-sm font-semibold text-white hover:bg-red-800 ${FOCUS}`}>
+              <RefreshCw size={16} /> Try again
+            </button>
+          )}
+          <Link href="/admin/products" className={`inline-flex h-11 items-center justify-center rounded-full border border-stone-300 px-6 text-sm font-semibold text-stone-800 hover:border-red-800 hover:text-red-800 ${FOCUS}`}>
+            Back to products
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-10 pb-20 max-w-350 mx-auto animate-in fade-in duration-700 p-6">
-      
-      {/* --- STICKY HEADER --- */}
-      <div className="sticky top-0 z-30 bg-stone-50/80 backdrop-blur-md py-4 -mx-6 px-6 border-b border-stone-200/50 transition-all">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-1">
-            <nav className="flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-stone-400 font-bold">
-              <Link href="/admin/products" className="hover:text-red-900 transition-colors">Inventory</Link>
-              <ChevronRight size={12} />
-              <span className="text-stone-900 uppercase">Edit Masterpiece</span>
-            </nav>
-            <h1 className="text-3xl font-serif text-stone-900 tracking-tight">
-              Update <span className="italic font-light text-stone-500">{formData.title || "Creation"}</span>
-            </h1>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <Link href={`/shop/${productId}`} target="_blank" className="p-3 text-stone-400 hover:text-red-900 transition-all">
-              <Eye size={20} strokeWidth={1.5} />
-            </Link>
-            <div className="h-8 w-px bg-stone-200 mx-2"></div>
-            <button 
-              onClick={handleSave}
-              disabled={saving}
-              className="bg-stone-900 text-white px-10 py-4 rounded-full text-xs uppercase tracking-[0.2em] font-bold flex items-center gap-2 hover:bg-red-900 transition-all shadow-xl disabled:opacity-50 active:scale-95"
+    <>
+      <ProductForm
+        mode="edit"
+        productId={productId}
+        initial={initial}
+        heading={initial.title || "Edit product"}
+        submitLabel="Save changes"
+        savingLabel="Saving…"
+        onSubmit={handleSave}
+        onCancel={() => router.push("/admin/products")}
+        extra={
+          <section className="rounded-2xl border border-red-200 bg-white p-6">
+            <h2 className="font-serif text-xl text-stone-900">Delete product</h2>
+            <p className="mt-1 text-base text-stone-600">
+              This removes the product from your store for good. If it’s just out of stock, set the stock to 0 instead.
+            </p>
+            <button
+              type="button"
+              onClick={() => { setDeleteError(null); setDeleteOpen(true); }}
+              className={`mt-4 inline-flex h-11 items-center gap-2 rounded-full border border-red-300 px-6 text-sm font-semibold text-red-800 hover:bg-red-50 ${FOCUS}`}
             >
-              {saving ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
-              {saving ? "Saving..." : "Save Changes"}
+              <Trash2 size={16} /> Delete product
             </button>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-        <div className="lg:col-span-8 space-y-8">
-          <section className="bg-white border border-stone-200 rounded-[2.5rem] overflow-hidden shadow-sm">
-            <div className="px-8 py-6 border-b border-stone-100 bg-stone-50/50 flex items-center gap-3">
-              <Type size={18} className="text-red-900" />
-              <h3 className="text-xs uppercase tracking-[0.2em] font-bold text-stone-900">Product Details</h3>
-            </div>
-            
-            <div className="p-8 space-y-8">
-              <div className="group space-y-2">
-                <label className="text-[10px] uppercase tracking-widest font-bold text-stone-400">Product Title</label>
-                <input 
-                  name="title"
-                  value={formData.title}
-                  onChange={handleChange}
-                  type="text" 
-                  className="w-full text-xl font-serif p-0 bg-transparent border-b border-stone-200 focus:border-red-900 outline-none transition-all pb-2 text-stone-900"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[10px] uppercase tracking-widest font-bold text-stone-400">Artisan Story</label>
-                <textarea 
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  rows={6}
-                  className="w-full p-5 bg-stone-50 border border-stone-100 rounded-2xl outline-none focus:bg-white focus:ring-4 ring-red-900/5 transition-all text-stone-600 leading-relaxed font-light italic"
-                ></textarea>
-              </div>
-            </div>
           </section>
-
-          <section className="bg-white border border-stone-200 rounded-[2.5rem] overflow-hidden shadow-sm p-8 grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
-            <div className="space-y-2">
-              <label className="text-[10px] uppercase tracking-widest font-bold text-stone-400">Selling Price (₹)</label>
-              <input 
-                name="price"
-                value={formData.price}
-                onChange={handleChange}
-                type="number" 
-                className="w-full p-4 bg-stone-50 border border-stone-100 rounded-xl outline-none focus:bg-white focus:border-red-900/30 transition-all text-sm font-bold" 
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-[10px] uppercase tracking-widest font-bold text-stone-400">Stock in Hand</label>
-              <input 
-                name="stock"
-                value={formData.stock}
-                onChange={handleChange}
-                type="number" 
-                className="w-full p-4 bg-stone-50 border border-stone-100 rounded-xl outline-none focus:bg-white focus:border-red-900/30 transition-all text-sm font-bold" 
-              />
-            </div>
-          </section>
-        </div>
-
-        <div className="lg:col-span-4 space-y-8">
-          <section className="bg-white border border-stone-200 rounded-[2.5rem] overflow-hidden shadow-sm">
-            <div className="px-8 py-6 border-b border-stone-100 bg-stone-50/50 flex items-center gap-3">
-              <ImageIcon size={18} className="text-red-900" />
-              <h3 className="text-xs uppercase tracking-[0.2em] font-bold text-stone-900">Media Gallery</h3>
-            </div>
-            
-            <div className="p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                {imageUrls.map((url, i) => (
-                    <div key={i} className="aspect-3/4 rounded-xl bg-stone-100 relative group overflow-hidden border border-stone-100 shadow-sm">
-                        <img src={url} className="w-full h-full object-cover" alt="" />
-                        <div className="absolute inset-0 bg-stone-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <button 
-                              onClick={() => setImageUrls(prev => prev.filter(u => u !== url))}
-                              className="p-2 bg-white rounded-full text-red-900 hover:scale-110 transition-transform shadow-lg"
-                            >
-                              <Trash2 size={14}/>
-                            </button>
-                        </div>
-                    </div>
-                ))}
-              </div>
-              
-              <CldUploadWidget 
-                uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET}
-                onSuccess={(res: any) => setImageUrls(prev => [...prev, res.info.secure_url])}
-              >
-                {({ open }) => (
-                  <button 
-                    type="button"
-                    onClick={() => open()}
-                    className="w-full border-2 border-dashed border-stone-200 rounded-2xl p-6 text-[10px] font-bold uppercase tracking-widest text-stone-400 hover:border-red-900 hover:text-red-900 transition-all"
-                  >
-                    + Upload New View
-                  </button>
-                )}
-              </CldUploadWidget>
-            </div>
-          </section>
-
-          <section className="bg-white border border-stone-200 rounded-[2.5rem] p-8 space-y-6 shadow-sm">
-            <div className="space-y-2">
-              <label className="text-[10px] uppercase tracking-widest font-bold text-stone-400">Fabric Classification</label>
-              <select 
-                name="category"
-                value={formData.category}
-                onChange={handleChange}
-                className="w-full p-4 bg-stone-50 border border-stone-100 rounded-xl outline-none text-sm font-bold appearance-none"
-              >
-                <option>Sartin Cotton</option>
-                <option>Cotton Bandhni</option>
-                <option>Pure Georgette</option>
-              </select>
-            </div>
-            <div className="flex items-center gap-3 text-green-600 bg-green-50 p-4 rounded-2xl border border-green-100">
-               <CheckCircle2 size={16} />
-               <p className="text-[10px] font-bold uppercase tracking-tight">Active on Storefront</p>
-            </div>
-          </section>
-        </div>
-      </div>
-    </div>
+        }
+      />
+      <ConfirmDialog
+        open={deleteOpen}
+        title="Delete this product?"
+        message={<><strong className="font-semibold text-stone-900">{initial.title}</strong> will be removed from your store. This can’t be undone.</>}
+        confirmLabel="Delete product"
+        danger
+        busy={deleting}
+        error={deleteError}
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteOpen(false)}
+      />
+    </>
   );
 }

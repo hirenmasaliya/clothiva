@@ -1,11 +1,11 @@
 "use client";
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import {
-  ArrowRight, Star, Globe, MapPin, Award, CheckCircle2, Sparkles,
-  History, Fingerprint, Waves, Sun, ShieldCheck, Heart, Coffee, Anchor
-} from 'lucide-react';
-import Link from 'next/link';
-import { useCart } from '@/context/CartContext';
+  ArrowRight, MapPin, Award, CheckCircle2, Sparkles, Waves, Sun,
+  ShieldCheck, Heart, Coffee, Globe, Check, RefreshCw,
+} from "lucide-react";
+import Link from "next/link";
+import { useCart } from "@/context/CartContext";
 
 interface Product {
   id: string;
@@ -19,20 +19,57 @@ interface Product {
   status?: string;
 }
 
+// Adjust to your real product route.
+const productHref = (id: string) => `/shop/${id}`;
+// Set to your Instagram URL; the link is hidden while empty.
+const INSTAGRAM_URL = "";
+
+const FOCUS =
+  "focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-red-800";
+
+const VALUES = [
+  {
+    icon: Heart,
+    tint: "bg-red-50 text-red-800",
+    title: "Ma No Prem",
+    text: "Like a mother’s touch: gentle and pure. Every thread is woven with the same care she puts into her daily prayers.",
+  },
+  {
+    icon: Sun,
+    tint: "bg-amber-50 text-amber-700",
+    title: "Saurashtra’s Sun",
+    text: "Our fabrics are dried naturally under the golden Gujarat sun, locking in colours that stay vibrant for generations.",
+  },
+  {
+    icon: Coffee,
+    tint: "bg-orange-50 text-orange-800",
+    title: "Asli Parampara",
+    text: "No mass machinery. Just slow, rhythmic artistry by hand, celebrating the authentic knot of Bandhani.",
+  },
+];
+
 export default function Home() {
   const [popularProducts, setPopularProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [addedId, setAddedId] = useState<string | null>(null);
+  const addedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { addToCart } = useCart();
 
   const fetchPopular = useCallback(async () => {
+    setLoading(true);
+    setError(false);
     try {
-      const res = await fetch('/api/products/popular');
+      const res = await fetch("/api/products/popular");
       const data = await res.json();
       if (data.success) {
         setPopularProducts(data.rankings.slice(0, 4));
+      } else {
+        setError(true);
       }
-    } catch (error) {
-      console.error("Error fetching popular products:", error);
+    } catch (err) {
+      console.error("Error fetching popular products:", err);
+      setError(true);
     } finally {
       setLoading(false);
     }
@@ -40,227 +77,343 @@ export default function Home() {
 
   useEffect(() => {
     fetchPopular();
+    return () => {
+      if (addedTimer.current) clearTimeout(addedTimer.current);
+    };
   }, [fetchPopular]);
 
-  return (
-    <main className="bg-[#FFFDFB] min-h-screen antialiased selection:bg-red-900 selection:text-white font-sans">
+  const handleAdd = (item: Product) => {
+    addToCart(item);
+    setAddedId(item.id);
+    if (addedTimer.current) clearTimeout(addedTimer.current);
+    addedTimer.current = setTimeout(() => setAddedId(null), 1800);
+  };
 
-      {/* --- HERO SECTION: THE PADHARO WELCOME --- */}
-      <section className="relative h-screen flex items-center overflow-hidden">
+  return (
+    <main className="min-h-screen bg-[#FFFDFB] font-sans antialiased selection:bg-red-900 selection:text-white">
+      {/* HERO */}
+      <section
+        aria-labelledby="hero-title"
+        className="relative flex min-h-svh items-center overflow-hidden"
+      >
         <div
-          className="absolute inset-0 bg-no-repeat bg-cover bg-center transition-transform duration-[20s] hover:scale-105"
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, rgba(43,10,10,0.9) 100%), url('/images/Website_Banner.png')`
+            backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.45) 0%, rgba(43,10,10,0.88) 100%), url('/images/Website_Banner.png')`,
           }}
         />
 
-        <div className="relative z-10 px-8 md:px-24 max-w-7xl w-full text-center md:text-left">
-          <div className="inline-flex items-center gap-3 mb-6 bg-red-900/30 backdrop-blur-md px-4 py-2 rounded-full border border-red-500/30">
-            <Sparkles size={14} className="text-yellow-500" />
-            <span className="text-red-100 uppercase tracking-[0.3em] text-[10px] font-black">
-              Padharo — A Piece of Gujarat Awaits You
-            </span>
-          </div>
-
-          <h1 className="text-6xl md:text-[110px] font-serif text-white leading-[0.9] mb-8 tracking-tighter">
-            Varse Chhe <br />
-            <span className="italic font-light text-red-400">Rangon ni Mausam</span>
-          </h1>
-
-          <p className="text-lg md:text-2xl text-stone-300 font-light max-w-2xl mb-12 leading-relaxed italic">
-            "The colors of Jetpur don't just sit on fabric; they live in our souls." Hand-dyed masterpieces that feel like home.
+        <div className="relative z-10 w-full max-w-7xl px-6 pb-16 pt-32 text-center md:px-24 md:text-left">
+          <p className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2 text-sm text-red-50 backdrop-blur-md">
+            <Sparkles size={14} className="text-amber-400" />
+            Padharo. A piece of Gujarat awaits you.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-6 justify-center md:justify-start">
-            <Link href="/shop" className="group bg-red-700 text-white px-12 py-5 text-xs uppercase tracking-[0.2em] font-bold transition-all flex items-center justify-center gap-4 hover:bg-yellow-600 rounded-full shadow-2xl">
-              Explore Our Virasat <ArrowRight size={16} />
+          <h1
+            id="hero-title"
+            className="mb-8 font-serif text-5xl leading-[0.95] tracking-tight text-white sm:text-7xl md:text-[104px]"
+          >
+            Varse Chhe <br />
+            <span className="font-light italic text-red-300">Rangon ni Mausam</span>
+          </h1>
+
+          <p className="mb-10 max-w-2xl text-lg font-light leading-relaxed text-stone-200 md:text-2xl">
+            “The colours of Jetpur don’t just sit on fabric; they live in our souls.”
+            <span className="mt-2 block text-base text-stone-300 md:text-lg">
+              Hand-dyed masterpieces that feel like home.
+            </span>
+          </p>
+
+          <div className="flex flex-col items-center gap-5 sm:flex-row md:items-center">
+            <Link
+              href="/shop"
+              className={`group inline-flex h-14 items-center justify-center gap-3 rounded-full bg-red-800 px-10 text-base font-semibold text-white shadow-2xl transition-colors hover:bg-red-700 ${FOCUS}`}
+            >
+              Shop the collection
+              <ArrowRight size={18} className="transition-transform group-hover:translate-x-1 motion-reduce:transition-none" />
             </Link>
-            <div className="flex items-center gap-3 text-white/80 px-6 py-4">
-              <MapPin size={18} className="text-red-500" />
-              <span className="text-xs font-medium tracking-widest uppercase italic">Born in Jetpur, Loved Globally</span>
-            </div>
+            <span className="inline-flex items-center gap-2 text-sm text-white/85">
+              <MapPin size={16} className="text-red-300" />
+              Born in Jetpur, loved globally
+            </span>
           </div>
         </div>
       </section>
 
-      {/* --- SECTION 1: THE SOUL OF THE FABRIC (GUJARATI HEART) --- */}
-      <section className="py-24 px-6 max-w-7xl mx-auto border-b border-stone-100">
-        <div className="grid md:grid-cols-3 gap-12 text-center">
-          <div className="space-y-4">
-            <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto">
-              <Heart className="text-red-800" fill="currentColor" size={24} />
+      {/* VALUES */}
+      <section aria-labelledby="values-title" className="mx-auto max-w-7xl px-6 py-20 md:py-28">
+        <h2 id="values-title" className="sr-only">What goes into every piece</h2>
+        <div className="grid gap-12 md:grid-cols-3 md:gap-0">
+          {VALUES.map(({ icon: Icon, tint, title, text }, i) => (
+            <div
+              key={title}
+              className={`space-y-4 text-center md:px-10 ${i > 0 ? "md:border-l md:border-stone-200" : ""}`}
+            >
+              <div className={`mx-auto grid h-14 w-14 place-items-center rounded-full ${tint}`}>
+                <Icon size={24} strokeWidth={1.75} />
+              </div>
+              <h3 className="font-serif text-2xl text-stone-900">{title}</h3>
+              <p className="mx-auto max-w-sm text-base leading-relaxed text-stone-600">{text}</p>
             </div>
-            <h4 className="font-serif text-2xl text-stone-900">Ma No Prem</h4>
-            <p className="text-sm text-stone-500 leading-relaxed">Like a mother's touch—gentle and pure. Every thread is woven with the same care she puts into her daily prayers.</p>
-          </div>
-          <div className="space-y-4 border-x border-stone-100 px-8">
-            <div className="w-16 h-16 bg-yellow-50 rounded-full flex items-center justify-center mx-auto">
-              <Sun className="text-yellow-700" size={24} />
-            </div>
-            <h4 className="font-serif text-2xl text-stone-900">Saurashtra’s Sun</h4>
-            <p className="text-sm text-stone-500 leading-relaxed">Our fabrics are dried naturally under the golden Gujarat sun, locking in colors that stay vibrant for generations.</p>
-          </div>
-          <div className="space-y-4">
-            <div className="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center mx-auto">
-              <Coffee className="text-orange-800" size={24} />
-            </div>
-            <h4 className="font-serif text-2xl text-stone-900">Asli Parampara</h4>
-            <p className="text-sm text-stone-500 leading-relaxed">No mass machinery. Just slow, rhythmic artistry by hand, celebrating the authentic 'Knot' of Bandhani.</p>
-          </div>
+          ))}
         </div>
       </section>
 
-      {/* --- SECTION 2: MATERIAL SCIENCE (SATIN COTTON) --- */}
-      <section className="py-32 px-6 max-w-7xl mx-auto">
-        <div className="grid md:grid-cols-2 gap-20 items-center">
-          <div className="space-y-8 order-2 md:order-1">
-            <div className="flex items-center gap-4">
-              <span className="bg-red-800 text-white px-3 py-1 text-[9px] font-black uppercase tracking-tighter rounded">Artisan Choice</span>
-              <span className="text-[10px] uppercase tracking-widest font-black text-stone-400">Pure Satin Cotton</span>
-            </div>
-            <h2 className="text-5xl font-serif text-stone-900 tracking-tighter">
-              As Smooth as <br />
-              <span className="italic text-red-800/60 font-medium">Morning Dew on the Narmada.</span>
-            </h2>
-            <p className="text-stone-600 leading-relaxed text-lg">
-              Our **Satin Cotton** is the perfect blend of strength and softness. Woven with a four-over-one technique, it provides a royal luster on the outside while keeping the inside cool and breathable—perfect for our Indian weather.
+      {/* MATERIAL */}
+      <section aria-labelledby="material-title" className="mx-auto max-w-7xl px-6 pb-24 md:pb-32">
+        <div className="grid items-center gap-14 md:grid-cols-2 md:gap-20">
+          <div className="order-2 space-y-7 md:order-1">
+            <p className="inline-flex items-center gap-3 text-sm text-stone-500">
+              <span className="rounded bg-red-800 px-2.5 py-1 text-xs font-semibold text-white">Artisan choice</span>
+              Pure satin cotton
             </p>
-            <div className="grid grid-cols-2 gap-6 pt-4">
-              <div className="p-8 bg-[#fdf8f4] rounded-3xl border border-stone-100 shadow-sm">
-                <Waves className="text-red-900 mb-3" size={20} />
-                <h5 className="font-bold text-xs uppercase mb-2 text-stone-800">Sateen Glow</h5>
-                <p className="text-[11px] text-stone-500 leading-relaxed">A subtle, natural shine that doesn't scream, but whispers elegance.</p>
-              </div>
-              <div className="p-8 bg-[#fdf8f4] rounded-3xl border border-stone-100 shadow-sm">
-                <Sun className="text-red-900 mb-3" size={20} />
-                <h5 className="font-bold text-xs uppercase mb-2 text-stone-800">Sweat-Free Elegance</h5>
-                <p className="text-[11px] text-stone-500 leading-relaxed">100% Cotton base ensures you stay fresh from morning Puja to evening dinner.</p>
-              </div>
+            <h2 id="material-title" className="font-serif text-4xl tracking-tight text-stone-900 md:text-5xl">
+              As smooth as <br />
+              <span className="font-medium italic text-red-800/70">morning dew on the Narmada.</span>
+            </h2>
+            <p className="max-w-xl text-lg leading-relaxed text-stone-600">
+              Our <strong className="font-semibold text-stone-900">satin cotton</strong> is the perfect blend of strength and
+              softness. Woven with a four-over-one technique, it gives a royal lustre on the outside while keeping the
+              inside cool and breathable, perfect for Indian weather.
+            </p>
+            <div className="grid gap-4 pt-2 sm:grid-cols-2">
+              {[
+                { icon: Waves, title: "Sateen glow", text: "A subtle, natural shine that doesn’t scream, but whispers elegance." },
+                { icon: Sun, title: "Stays fresh all day", text: "A 100% cotton base keeps you comfortable from morning puja to evening dinner." },
+              ].map(({ icon: Icon, title, text }) => (
+                <div key={title} className="rounded-2xl border border-stone-100 bg-[#fdf8f4] p-6">
+                  <Icon className="mb-3 text-red-900" size={22} strokeWidth={1.75} />
+                  <h3 className="mb-1.5 text-base font-semibold text-stone-900">{title}</h3>
+                  <p className="text-sm leading-relaxed text-stone-600">{text}</p>
+                </div>
+              ))}
             </div>
           </div>
-          <div className="relative order-1 md:order-2">
-            <div className="absolute -inset-4 border border-stone-200 rounded-[4rem] rotate-3 -z-10"></div>
+
+          <figure className="relative order-1 md:order-2">
             <img
               src="https://5.imimg.com/data5/YE/AN/PT/SELLER-22984508/cotton-satin-fabric.jpg"
-              className="w-full aspect-4/5 object-cover rounded-[3rem] shadow-2xl"
-              alt="Premium Satin Cotton"
+              loading="lazy"
+              className="aspect-[4/5] w-full rounded-3xl object-cover shadow-xl"
+              alt="Folds of premium satin cotton fabric with a soft sheen"
             />
-            <div className="absolute -bottom-6 -right-6 bg-white p-6 rounded-2xl shadow-xl border border-stone-50 hidden md:block">
-              <p className="text-[24px] font-serif text-red-900 leading-none">80g</p>
-              <p className="text-[9px] font-black uppercase tracking-widest text-stone-400 mt-1">Per Meter Density</p>
-            </div>
-          </div>
+            <figcaption className="absolute -bottom-5 right-4 rounded-2xl border border-stone-100 bg-white px-6 py-4 shadow-lg md:-right-6">
+              <p className="font-serif text-3xl leading-none text-red-900">80g</p>
+              <p className="mt-1 text-xs text-stone-500">per metre density</p>
+            </figcaption>
+          </figure>
         </div>
       </section>
 
-      {/* --- SECTION 3: TRENDING (JETPUR RANKINGS) --- */}
-      <section className="py-32 bg-stone-50 rounded-[4rem] mx-4">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-col md:flex-row justify-between items-center mb-16 gap-6">
+      {/* POPULAR PRODUCTS */}
+      <section aria-labelledby="popular-title" className="mx-3 rounded-[2rem] bg-stone-50 py-24 md:mx-4 md:py-28">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="mb-14 flex flex-col items-center justify-between gap-5 md:flex-row md:items-end">
             <div className="text-center md:text-left">
-              <h2 className="text-5xl font-serif text-stone-900 tracking-tighter italic">Vikasit Varsa</h2>
-              <p className="text-xs text-red-800 uppercase tracking-[0.3em] font-bold mt-2">What Gujarat is wearing today</p>
+              <h2 id="popular-title" className="font-serif text-4xl italic tracking-tight text-stone-900 md:text-5xl">
+                Vikasit Varsa
+              </h2>
+              <p className="mt-2 text-base text-red-800">What Gujarat is wearing today</p>
             </div>
-            <Link href="/shop" className="group flex items-center gap-3 text-[10px] uppercase tracking-widest font-bold">
-              View the Full Pittar <ArrowRight size={14} className="group-hover:translate-x-2 transition-transform" />
+            <Link
+              href="/shop"
+              className={`group inline-flex items-center gap-2 text-base font-semibold text-stone-900 hover:text-red-800 ${FOCUS}`}
+            >
+              View all collections
+              <ArrowRight size={16} className="transition-transform group-hover:translate-x-1.5 motion-reduce:transition-none" />
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10">
-            {loading ? (
-              [...Array(4)].map((_, i) => <div key={i} className="aspect-3/4 bg-stone-200 animate-pulse rounded-3xl" />)
-            ) : popularProducts.map((item, idx) => (
-              <div key={item.id} className="group">
-                <div className="relative aspect-3/4.5 rounded-[2.5rem] overflow-hidden mb-6 bg-white shadow-sm hover:shadow-2xl transition-all duration-500">
-                  <div className="absolute top-5 left-5 z-20 bg-yellow-500 text-black text-[6px] font-black px-3 py-1.5 rounded-full tracking-widest">
-                    #{idx + 1} MOST LOVED
-                  </div>
-                  <img src={item.images[0]} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" />
-                  <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-6">
-                    <button onClick={() => addToCart(item)} className="w-full bg-white text-stone-900 py-4 text-[10px] font-bold uppercase rounded-2xl shadow-xl">Take it Home</button>
-                  </div>
+          {loading ? (
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-8" aria-busy="true" aria-label="Loading popular products">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="space-y-4">
+                  <div className="aspect-[3/4] animate-pulse rounded-2xl bg-stone-200 motion-reduce:animate-none" />
+                  <div className="h-4 w-3/4 animate-pulse rounded bg-stone-200 motion-reduce:animate-none" />
+                  <div className="h-4 w-1/3 animate-pulse rounded bg-stone-200 motion-reduce:animate-none" />
                 </div>
-                <h3 className="text-md font-serif text-stone-800">{item.title}</h3>
-                <div className="flex justify-between items-center mt-2">
-                  <p className="text-sm font-bold text-red-950">₹{item.price}</p>
-                  <span className="text-[9px] text-stone-400 font-bold uppercase">{item.count} Sold recently</span>
-                </div>
+              ))}
+            </div>
+          ) : error || popularProducts.length === 0 ? (
+            <div className="mx-auto max-w-md rounded-2xl border border-stone-200 bg-white p-10 text-center">
+              <p className="font-serif text-2xl text-stone-900">
+                {error ? "We couldn’t load the bestsellers" : "No bestsellers yet"}
+              </p>
+              <p className="mt-2 text-base text-stone-600">
+                {error ? "Check your connection and try again, or browse the full collection." : "Browse the full collection while we update this list."}
+              </p>
+              <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+                {error && (
+                  <button
+                    type="button"
+                    onClick={fetchPopular}
+                    className={`inline-flex h-12 items-center justify-center gap-2 rounded-full bg-red-800 px-6 text-sm font-semibold text-white hover:bg-red-700 ${FOCUS}`}
+                  >
+                    <RefreshCw size={16} /> Try again
+                  </button>
+                )}
+                <Link
+                  href="/shop"
+                  className={`inline-flex h-12 items-center justify-center rounded-full border border-stone-300 px-6 text-sm font-semibold text-stone-800 hover:border-red-800 hover:text-red-800 ${FOCUS}`}
+                >
+                  Browse collections
+                </Link>
               </div>
-            ))}
-          </div>
+            </div>
+          ) : (
+            <ul className="grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-4 md:gap-x-8">
+              {popularProducts.map((item, idx) => {
+                const added = addedId === item.id;
+                return (
+                  <li key={item.id} className="group flex flex-col">
+                    <Link href={productHref(item.id)} className={`block ${FOCUS}`}>
+                      <div className="relative mb-4 aspect-[3/4] overflow-hidden rounded-2xl bg-white shadow-sm transition-shadow duration-300 group-hover:shadow-xl">
+                        {idx === 0 && (
+                          <span className="absolute left-3 top-3 z-10 rounded-full bg-amber-400 px-3 py-1 text-xs font-bold text-stone-900">
+                            Most loved
+                          </span>
+                        )}
+                        <img
+                          src={item.images?.[0]}
+                          alt={item.title}
+                          loading="lazy"
+                          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105 motion-reduce:transition-none"
+                        />
+                      </div>
+                      <h3 className="font-serif text-lg leading-snug text-stone-900 group-hover:text-red-800">{item.title}</h3>
+                    </Link>
+                    <div className="mt-1.5 flex items-baseline justify-between gap-2">
+                      <p className="text-base font-semibold text-red-950">₹{item.price.toLocaleString("en-IN")}</p>
+                      <span className="text-xs text-stone-500">{item.count} sold recently</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleAdd(item)}
+                      aria-live="polite"
+                      className={`mt-4 inline-flex h-12 items-center justify-center gap-2 rounded-full border text-sm font-semibold transition-colors ${FOCUS} ${
+                        added
+                          ? "border-emerald-700 bg-emerald-700 text-white"
+                          : "border-stone-300 bg-white text-stone-900 hover:border-red-800 hover:bg-red-800 hover:text-white"
+                      }`}
+                    >
+                      {added ? (<><Check size={16} /> Added to cart</>) : "Add to cart"}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </div>
       </section>
 
-      {/* --- SECTION 4: THE MASTER ARTISANS --- */}
-      <section className="py-32 bg-[#1a1512] text-white rounded-[4rem] mx-4 mb-32 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-8 grid md:grid-cols-2 gap-24 items-center">
-          <div className="space-y-10">
-            <div className="flex items-center gap-4">
-              <Award className="text-yellow-500" />
-              <span className="text-[10px] uppercase tracking-widest font-black text-yellow-500/80">Karigari Heritage</span>
-            </div>
-            <h2 className="text-6xl font-serif tracking-tighter leading-tight">Meet the <br /><span className="italic text-stone-500 font-light">Sisters of Jetpur.</span></h2>
-            <p className="text-stone-400 text-lg font-light leading-relaxed">
-              Every single knot is tied by our local female artisans who have kept this 400-year-old tradition alive. This isn't a factory; it's a neighborhood coming together to weave magic.
+      {/* ARTISANS */}
+      <section
+        aria-labelledby="artisans-title"
+        className="mx-3 my-24 overflow-hidden rounded-[2rem] bg-[#1a1512] py-24 text-white md:mx-4 md:my-32 md:py-28"
+      >
+        <div className="mx-auto grid max-w-7xl items-center gap-16 px-6 md:grid-cols-2 md:gap-24 md:px-8">
+          <div className="space-y-8">
+            <p className="flex items-center gap-3 text-base text-amber-400">
+              <Award size={20} /> Karigari heritage
             </p>
-            <div className="grid grid-cols-1 gap-4">
-              <div className="flex items-center gap-4 p-5 bg-white/5 rounded-2xl border border-white/10">
-                <CheckCircle2 className="text-yellow-500" size={18} />
-                <p className="text-[11px] uppercase tracking-[0.2em] font-bold">100% Fair Wages paid directly</p>
-              </div>
-              <div className="flex items-center gap-4 p-5 bg-white/5 rounded-2xl border border-white/10">
-                <CheckCircle2 className="text-yellow-500" size={18} />
-                <p className="text-[11px] uppercase tracking-[0.2em] font-bold">Supporting Rural Education</p>
-              </div>
-            </div>
+            <h2 id="artisans-title" className="font-serif text-5xl leading-tight tracking-tight md:text-6xl">
+              Meet the <br />
+              <span className="font-light italic text-stone-400">Sisters of Jetpur.</span>
+            </h2>
+            <p className="max-w-xl text-lg font-light leading-relaxed text-stone-300">
+              Every single knot is tied by local women artisans who have kept this 400-year-old tradition alive. This isn’t
+              a factory; it’s a neighbourhood coming together to weave magic.
+            </p>
+            <ul className="space-y-3">
+              {["100% fair wages, paid directly", "Supporting rural education"].map((t) => (
+                <li key={t} className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 p-5">
+                  <CheckCircle2 className="shrink-0 text-amber-400" size={20} />
+                  <span className="text-base font-medium">{t}</span>
+                </li>
+              ))}
+            </ul>
           </div>
           <div className="relative">
-            <div className="absolute -top-10 -right-10 w-64 h-64 bg-red-900/20 blur-[100px] rounded-full"></div>
-            <div className="grid grid-cols-2 gap-4">
-              <img src="https://cdn.shopify.com/s/files/1/0902/3202/files/Bandhani-process_large.jpg?v=1533699306" className="w-full aspect-4/5 object-cover rounded-3xl" />
-              <img src="https://villagehaat.store/wp-content/uploads/2022/02/image.jpg.webp" className="w-full aspect-4/5 object-cover rounded-3xl mt-12" />
+            <div className="absolute -right-10 -top-10 h-64 w-64 rounded-full bg-red-900/25 blur-[100px]" aria-hidden />
+            <div className="relative grid grid-cols-2 gap-4">
+              <img
+                src="https://cdn.shopify.com/s/files/1/0902/3202/files/Bandhani-process_large.jpg?v=1533699306"
+                alt="An artisan tying the small knots of Bandhani on cloth"
+                loading="lazy"
+                className="aspect-[4/5] w-full rounded-2xl object-cover"
+              />
+              <img
+                src="https://villagehaat.store/wp-content/uploads/2022/02/image.jpg.webp"
+                alt="Bandhani cloth, dyed and ready to be unknotted"
+                loading="lazy"
+                className="mt-10 aspect-[4/5] w-full rounded-2xl object-cover"
+              />
             </div>
           </div>
         </div>
       </section>
 
-      {/* --- FINAL CTA: THE FAMILY LEGACY --- */}
-      <section className="relative h-[80vh] flex items-center justify-center m-4 rounded-[4rem] overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1621252179027-94459d278660?q=80&w=2000')] bg-cover bg-fixed bg-center" />
-        <div className="absolute inset-0 bg-red-950/80 backdrop-blur-md" />
-        <div className="relative z-10 text-center text-white px-6">
-          <h2 className="text-5xl md:text-8xl font-serif italic font-extralight mb-12">Carry Your Culture.</h2>
-          <div className="flex flex-col items-center gap-8">
-            <Link href="/shop" className="group bg-white text-black px-16 py-6 text-xs uppercase tracking-[0.4em] font-black hover:bg-yellow-500 hover:text-white transition-all rounded-full flex items-center gap-4">
-              Explore the Pittar <ArrowRight size={18} />
+      {/* FINAL CTA */}
+      <section
+        aria-labelledby="cta-title"
+        className="relative m-3 flex min-h-[70vh] items-center justify-center overflow-hidden rounded-[2rem] md:m-4"
+      >
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1621252179027-94459d278660?q=80&w=2000')] bg-cover bg-center" />
+        <div className="absolute inset-0 bg-red-950/80" />
+        <div className="relative z-10 px-6 py-20 text-center text-white">
+          <h2 id="cta-title" className="mb-10 font-serif text-5xl font-extralight italic md:text-8xl">
+            Carry your culture.
+          </h2>
+          <div className="flex flex-col items-center gap-5 sm:flex-row sm:justify-center">
+            <Link
+              href="/shop"
+              className={`group inline-flex h-14 items-center gap-3 rounded-full bg-white px-10 text-base font-semibold text-stone-900 transition-colors hover:bg-amber-400 ${FOCUS}`}
+            >
+              Shop the collection
+              <ArrowRight size={18} className="transition-transform group-hover:translate-x-1 motion-reduce:transition-none" />
             </Link>
-            <div className="flex gap-12 mt-4 opacity-70">
-              <div className="flex flex-col items-center gap-2">
-                <ShieldCheck size={20} className="text-yellow-500" />
-                <span className="text-[9px] uppercase tracking-widest font-bold">Secure Delivery</span>
-              </div>
-              <div className="flex flex-col items-center gap-2">
-                <Globe size={20} className="text-yellow-500" />
-                <span className="text-[9px] uppercase tracking-widest font-bold">Pan-India & Global</span>
-              </div>
-            </div>
+            <Link
+              href="/bulk-orders"
+              className={`inline-flex h-14 items-center rounded-full border border-white/50 px-10 text-base font-semibold text-white transition-colors hover:bg-white/10 ${FOCUS}`}
+            >
+              Order in bulk
+            </Link>
           </div>
+          <ul className="mt-12 flex justify-center gap-10 text-sm text-white/80">
+            <li className="flex flex-col items-center gap-2">
+              <ShieldCheck size={22} className="text-amber-400" /> Secure delivery
+            </li>
+            <li className="flex flex-col items-center gap-2">
+              <Globe size={22} className="text-amber-400" /> Pan-India and global
+            </li>
+          </ul>
         </div>
       </section>
 
-      {/* Footer */}
-      <div className="py-20 px-6 flex flex-col md:flex-row justify-between items-center gap-10 max-w-7xl mx-auto">
-        <div className="space-y-2 text-center md:text-left">
-          <p className="text-lg font-serif text-stone-800 italic">Clothiva Heritage</p>
-          <p className="text-[9px] uppercase tracking-[0.4em] text-stone-400 font-bold">© 2026 Crafted with love in Jetpur, Gujarat</p>
+      {/* FOOTER */}
+      <footer className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-8 px-6 py-16 md:flex-row">
+        <div className="space-y-1.5 text-center md:text-left">
+          <p className="font-serif text-xl italic text-stone-800">Clothiva Heritage</p>
+          <p className="text-sm text-stone-500">© 2026 Crafted with love in Jetpur, Gujarat</p>
         </div>
-        <div className="flex gap-12">
-          <Link href="#" className="text-[10px] uppercase tracking-[0.2em] text-stone-500 font-bold hover:text-red-900 transition-colors">Our Story</Link>
-          <Link href="#" className="text-[10px] uppercase tracking-[0.2em] text-stone-500 font-bold hover:text-red-900 transition-colors">Artisan Care</Link>
-          <Link href="#" className="text-[10px] uppercase tracking-[0.2em] text-stone-500 font-bold hover:text-red-900 transition-colors">Instagram</Link>
-        </div>
-      </div>
-
+        <nav aria-label="Footer" className="flex flex-wrap justify-center gap-x-8 gap-y-3">
+          {[
+            { name: "Our story", href: "/story" },
+            { name: "Bulk orders", href: "/bulk-orders" },
+            { name: "Privacy", href: "/privacy" },
+            { name: "Terms", href: "/terms" },
+          ].map((l) => (
+            <Link key={l.href} href={l.href} className={`text-sm text-stone-600 hover:text-red-800 ${FOCUS}`}>
+              {l.name}
+            </Link>
+          ))}
+          {INSTAGRAM_URL && (
+            <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" className={`text-sm text-stone-600 hover:text-red-800 ${FOCUS}`}>
+              Instagram
+            </a>
+          )}
+        </nav>
+      </footer>
     </main>
   );
 }
